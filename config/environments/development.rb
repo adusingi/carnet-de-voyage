@@ -28,6 +28,9 @@ Rails.application.configure do
   # Change to :null_store to avoid any caching.
   config.cache_store = :memory_store
 
+  # Devise: required for Devise to work in development
+  config.action_mailer.default_url_options = { host: 'localhost', port: 3001 }
+
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
