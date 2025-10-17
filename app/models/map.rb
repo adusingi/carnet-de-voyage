@@ -6,7 +6,7 @@ class Map < ApplicationRecord
   has_many :tags, through: :map_tags
 
   # Enums
-  enum privacy: { public: 0, private: 1, shared: 2 }
+  enum :privacy, { public: 0, private: 1, shared: 2 }
 
   # Validations
   validates :title, presence: true

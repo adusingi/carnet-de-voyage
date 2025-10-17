@@ -8,7 +8,7 @@ class User < ApplicationRecord
   has_many :maps, foreign_key: :creator_id, dependent: :destroy
 
   # Enums
-  enum role: { free: 0, paid: 1, b2b: 2 }
+  enum :role, { free: 0, paid: 1, b2b: 2 }
 
   # Validations
   validates :username, presence: true, uniqueness: true
