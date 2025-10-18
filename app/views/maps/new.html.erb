@@ -1,0 +1,50 @@
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold text-gray-900 mb-8">Create New Map</h1>
+
+  <%= form_with model: @map, class: "space-y-6" do |form| %>
+    <% if @map.errors.any? %>
+      <div class="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <h2 class="font-bold mb-2"><%= pluralize(@map.errors.count, "error") %> prohibited this map from being saved:</h2>
+        <ul class="list-disc list-inside">
+          <% @map.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div>
+      <%= form.label :title, class: "block text-sm font-medium text-gray-700 mb-2" %>
+      <%= form.text_field :title, class: "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent", placeholder: "My Tokyo Adventure" %>
+    </div>
+
+    <div>
+      <%= form.label :description, class: "block text-sm font-medium text-gray-700 mb-2" %>
+      <%= form.text_area :description, rows: 3, class: "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent", placeholder: "A brief description of your trip..." %>
+    </div>
+
+    <div>
+      <%= form.label :privacy, class: "block text-sm font-medium text-gray-700 mb-2" %>
+      <%= form.select :privacy,
+          [
+            ['Public - Anyone can see', 'publicly_visible'],
+            ['Private - Only you can see', 'privately_visible'],
+            ['Shared - Anyone with link can see', 'shared_with_link']
+          ],
+          {},
+          class: "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      %>
+    </div>
+
+    <div>
+      <%= form.label :original_text, "Trip Notes or Itinerary", class: "block text-sm font-medium text-gray-700 mb-2" %>
+      <p class="text-sm text-gray-500 mb-2">Paste your trip notes, itinerary, or travel plans. We'll automatically extract places and add them to your map.</p>
+      <%= form.text_area :original_text, rows: 10, class: "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm", placeholder: "Example:\n\nDay 1 in Tokyo:\n- Visit Senso-ji Temple in Asakusa\n- Lunch at Ichiran Ramen in Shibuya\n- Evening at Tokyo Skytree\n\nDay 2:\n- Breakfast at Tsukiji Market\n- Explore Harajuku and Meiji Shrine\n..." %>
+    </div>
+
+    <div class="flex gap-4">
+      <%= form.submit "Create Map", class: "px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium cursor-pointer" %>
+      <%= link_to "Cancel", maps_path, class: "px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition inline-block" %>
+    </div>
+  <% end %>
+</div>

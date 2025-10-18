@@ -36,6 +36,9 @@ module CarnetDeVoyage
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
 
+    # Autoload services directory
+    config.autoload_paths << Rails.root.join("app/services")
+
     # Don't generate system test files.
     config.generators.system_tests = nil
   end

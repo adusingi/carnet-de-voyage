@@ -1,0 +1,57 @@
+<div class="max-w-6xl mx-auto px-4 py-8">
+  <div class="flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">
+      <%= user_signed_in? ? "My Maps" : "Public Maps" %>
+    </h1>
+    <% if user_signed_in? %>
+      <%= link_to "Create New Map", new_map_path, class: "px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition inline-block" %>
+    <% end %>
+  </div>
+
+  <% if @maps.any? %>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% @maps.each do |map| %>
+        <div class="bg-white rounded-lg shadow hover:shadow-lg transition">
+          <%= link_to map, class: "block" do %>
+            <div class="p-6">
+              <h2 class="text-xl font-semibold text-gray-900 mb-2"><%= map.title %></h2>
+
+              <% if map.destination.present? %>
+                <p class="text-sm text-gray-600 mb-2">
+                  <span class="inline-block mr-1">📍</span>
+                  <%= map.destination %>
+                </p>
+              <% end %>
+
+              <% if map.description.present? %>
+                <p class="text-gray-600 text-sm mb-4 line-clamp-2"><%= map.description %></p>
+              <% end %>
+
+              <div class="flex items-center justify-between text-sm text-gray-500">
+                <span><%= map.places_count %> places</span>
+                <span class="text-xs">
+                  <% if map.privacy_publicly_visible? %>
+                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded">Public</span>
+                  <% elsif map.privacy_privately_visible? %>
+                    <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded">Private</span>
+                  <% else %>
+                    <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded">Shared</span>
+                  <% end %>
+                </span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="text-center py-12 bg-gray-50 rounded-lg">
+      <p class="text-gray-600 mb-4">
+        <%= user_signed_in? ? "You haven't created any maps yet." : "No public maps available yet." %>
+      </p>
+      <% if user_signed_in? %>
+        <%= link_to "Create Your First Map", new_map_path, class: "px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition inline-block" %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

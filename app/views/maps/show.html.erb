@@ -1,0 +1,119 @@
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <div class="flex justify-between items-start mb-6">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900 mb-2"><%= @map.title %></h1>
+      <% if @map.destination.present? %>
+        <p class="text-gray-600">
+          <span class="inline-block mr-1">📍</span>
+          <%= @map.destination %>
+        </p>
+      <% end %>
+      <p class="text-sm text-gray-500 mt-1">
+        Created by <span class="font-medium"><%= @map.creator.username %></span>
+        <span class="mx-1">•</span>
+        <%= time_ago_in_words(@map.created_at) %> ago
+      </p>
+    </div>
+
+    <div class="flex gap-2">
+      <% if user_signed_in? && @map.creator == current_user %>
+        <%= link_to "Edit", edit_map_path(@map), class: "px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition" %>
+        <%= button_to "Delete", @map, method: :delete, data: { turbo_confirm: "Are you sure?" }, class: "px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition" %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Share Options -->
+  <% if @map.places.any? %>
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+      <h3 class="text-sm font-semibold text-gray-700 mb-3">Share this map:</h3>
+      <div class="flex flex-wrap gap-3">
+        <!-- Carnet de Voyage Link -->
+        <button onclick="copyToClipboard('<%= map_url(@map) %>')" class="px-4 py-2 bg-white border border-gray-300 rounded hover:bg-gray-50 transition text-sm">
+          Copy Web Link
+        </button>
+
+        <!-- Google Maps Link -->
+        <% if @map.google_maps_url.present? %>
+          <%= link_to "Open in Google Maps", @map.google_maps_url, target: "_blank", class: "px-4 py-2 bg-white border border-gray-300 rounded hover:bg-gray-50 transition text-sm" %>
+        <% end %>
+
+        <!-- PDF Export -->
+        <%= link_to "Export PDF", map_path(@map, format: :pdf), class: "px-4 py-2 bg-white border border-gray-300 rounded hover:bg-gray-50 transition text-sm" %>
+      </div>
+      <p class="text-xs text-gray-500 mt-2" id="copy-feedback"></p>
+    </div>
+  <% end %>
+
+  <% if @map.description.present? %>
+    <p class="text-gray-700 mb-6"><%= @map.description %></p>
+  <% end %>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Map Container -->
+    <div class="lg:col-span-2">
+      <div id="map" class="w-full rounded-lg shadow" style="height: 600px; min-height: 600px;" data-controller="map" data-map-places-value="<%= @map.places.to_json(only: [:id, :name, :latitude, :longitude, :address, :place_type, :context]) %>"></div>
+    </div>
+
+    <!-- Places List -->
+    <div class="lg:col-span-1">
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">
+          Places (<%= @map.places_count %>)
+        </h2>
+
+        <% if @map.places.any? %>
+          <div class="space-y-4">
+            <% @map.places.ordered.each do |place| %>
+              <div class="border-l-4 border-blue-500 pl-3 py-2">
+                <h3 class="font-semibold text-gray-900"><%= place.name %></h3>
+                <% if place.place_type.present? %>
+                  <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded inline-block mt-1">
+                    <%= place.place_type %>
+                  </span>
+                <% end %>
+                <% if place.context.present? %>
+                  <p class="text-sm text-gray-600 mt-1"><%= place.context %></p>
+                <% end %>
+                <% if place.address.present? %>
+                  <p class="text-xs text-gray-500 mt-1"><%= place.address %></p>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-gray-500 text-sm">No places added yet.</p>
+        <% end %>
+      </div>
+
+      <% if @map.original_text.present? %>
+        <div class="bg-white rounded-lg shadow p-6 mt-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-4">Original Notes</h2>
+          <div class="text-sm text-gray-700 whitespace-pre-wrap"><%= @map.original_text %></div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <%= link_to "← Back to Maps", maps_path, class: "text-blue-600 hover:text-blue-800" %>
+  </div>
+</div>
+
+<script>
+  function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+      const feedback = document.getElementById('copy-feedback');
+      feedback.textContent = '✓ Link copied to clipboard!';
+      feedback.classList.add('text-green-600');
+      setTimeout(() => {
+        feedback.textContent = '';
+        feedback.classList.remove('text-green-600');
+      }, 3000);
+    }, function(err) {
+      const feedback = document.getElementById('copy-feedback');
+      feedback.textContent = '✗ Failed to copy link';
+      feedback.classList.add('text-red-600');
+    });
+  }
+</script>
