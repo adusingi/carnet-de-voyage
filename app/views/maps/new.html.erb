@@ -1,50 +1,60 @@
-<div class="max-w-4xl mx-auto px-4 py-8">
-  <h1 class="text-3xl font-bold text-gray-900 mb-8">Create New Map</h1>
+<div class="min-h-screen bg-white">
+  <!-- Header -->
+  <div class="border-b border-gray-200">
+    <div class="max-w-5xl mx-auto px-6 py-6">
+      <h1 class="text-4xl font-bold text-gray-900">Carnet de Voyage</h1>
+      <p class="text-gray-600 mt-1">Transform your travel notes into interactive maps</p>
+    </div>
+  </div>
 
-  <%= form_with model: @map, class: "space-y-6" do |form| %>
-    <% if @map.errors.any? %>
-      <div class="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
-        <h2 class="font-bold mb-2"><%= pluralize(@map.errors.count, "error") %> prohibited this map from being saved:</h2>
-        <ul class="list-disc list-inside">
-          <% @map.errors.each do |error| %>
-            <li><%= error.full_message %></li>
-          <% end %>
-        </ul>
+  <!-- Main Content -->
+  <div class="max-w-5xl mx-auto px-6 py-12">
+    <%= form_with model: @map, class: "space-y-8" do |form| %>
+      <% if @map.errors.any? %>
+        <div class="bg-red-50 border-l-4 border-red-500 p-4">
+          <p class="font-medium text-red-800"><%= pluralize(@map.errors.count, "error") %> prevented this map from being saved:</p>
+          <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+            <% @map.errors.each do |error| %>
+              <li><%= error.full_message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <!-- Destination -->
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex items-start gap-2">
+          <span class="text-blue-600 mt-1">📍</span>
+          <div class="flex-1">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Destination</label>
+            <%= form.text_field :title, class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500", placeholder: "New York City, USA" %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trip Notes -->
+      <div>
+        <h2 class="text-2xl font-semibold text-gray-900 mb-4">Your Trip Notes</h2>
+        <%= form.text_area :original_text, rows: 16, class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-gray-800 leading-relaxed", placeholder: "New York City\nGive me 5 great cocktail bars\nFive Great Cocktail Bars to Try on Your Next Night Out:\n1. The Up & Up is a low-key, high-end cocktail bar in the West Village...\n2. The Raines Law Room at The William (Lounge)...\n3. The Rum House...\n4. Mother's Ruin..." %>
+        <p class="text-sm text-gray-500 mt-2">Paste your trip notes or itinerary. We'll extract places and add them to your map automatically.</p>
+      </div>
+
+      <!-- Hidden fields for description and privacy -->
+      <%= form.hidden_field :description %>
+      <%= form.hidden_field :privacy, value: 'shared_with_link' %>
+
+      <!-- Submit Button -->
+      <div class="flex gap-3">
+        <%= form.submit "Generate Map", class: "px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium cursor-pointer" %>
+        <%= link_to "Cancel", maps_path, class: "px-8 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition" %>
       </div>
     <% end %>
+  </div>
 
-    <div>
-      <%= form.label :title, class: "block text-sm font-medium text-gray-700 mb-2" %>
-      <%= form.text_field :title, class: "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent", placeholder: "My Tokyo Adventure" %>
+  <!-- Footer -->
+  <div class="border-t border-gray-200 mt-16">
+    <div class="max-w-5xl mx-auto px-6 py-6">
+      <p class="text-sm text-gray-500 text-center">Powered by OpenAI GPT-4 & Mapbox</p>
     </div>
-
-    <div>
-      <%= form.label :description, class: "block text-sm font-medium text-gray-700 mb-2" %>
-      <%= form.text_area :description, rows: 3, class: "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent", placeholder: "A brief description of your trip..." %>
-    </div>
-
-    <div>
-      <%= form.label :privacy, class: "block text-sm font-medium text-gray-700 mb-2" %>
-      <%= form.select :privacy,
-          [
-            ['Public - Anyone can see', 'publicly_visible'],
-            ['Private - Only you can see', 'privately_visible'],
-            ['Shared - Anyone with link can see', 'shared_with_link']
-          ],
-          {},
-          class: "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-      %>
-    </div>
-
-    <div>
-      <%= form.label :original_text, "Trip Notes or Itinerary", class: "block text-sm font-medium text-gray-700 mb-2" %>
-      <p class="text-sm text-gray-500 mb-2">Paste your trip notes, itinerary, or travel plans. We'll automatically extract places and add them to your map.</p>
-      <%= form.text_area :original_text, rows: 10, class: "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm", placeholder: "Example:\n\nDay 1 in Tokyo:\n- Visit Senso-ji Temple in Asakusa\n- Lunch at Ichiran Ramen in Shibuya\n- Evening at Tokyo Skytree\n\nDay 2:\n- Breakfast at Tsukiji Market\n- Explore Harajuku and Meiji Shrine\n..." %>
-    </div>
-
-    <div class="flex gap-4">
-      <%= form.submit "Create Map", class: "px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium cursor-pointer" %>
-      <%= link_to "Cancel", maps_path, class: "px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition inline-block" %>
-    </div>
-  <% end %>
+  </div>
 </div>
