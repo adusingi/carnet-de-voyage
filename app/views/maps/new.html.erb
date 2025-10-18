@@ -1,54 +1,73 @@
-<div class="min-h-screen bg-white">
-  <!-- Header -->
-  <div class="border-b border-gray-200">
-    <div class="max-w-5xl mx-auto px-6 py-6">
-      <h1 class="text-4xl font-bold text-gray-900">Carnet de Voyage</h1>
-      <p class="text-gray-600 mt-1">Transform your travel notes into interactive maps</p>
-    </div>
-  </div>
+<div data-turbo="false" style="display: flex; height: 100vh; overflow: hidden;">
+  <!-- LEFT SIDE: 40% width -->
+  <div style="width: 40%; display: flex; flex-direction: column; background-color: white; padding: 24px;">
 
-  <!-- Main Content -->
-  <div class="max-w-5xl mx-auto px-6 py-12">
-    <%= form_with model: @map, class: "space-y-8" do |form| %>
-      <% if @map.errors.any? %>
-        <div class="bg-red-50 border-l-4 border-red-500 p-4">
-          <p class="font-medium text-red-800"><%= pluralize(@map.errors.count, "error") %> prevented this map from being saved:</p>
-          <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
-            <% @map.errors.each do |error| %>
-              <li><%= error.full_message %></li>
-            <% end %>
-          </ul>
-        </div>
-      <% end %>
-
-      <!-- Destination -->
-      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div class="flex items-start gap-2">
-          <span class="text-blue-600 mt-1">📍</span>
-          <div class="flex-1">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Destination</label>
-            <%= form.text_field :title, class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500", placeholder: "New York City, USA" %>
-          </div>
-        </div>
-      </div>
-
-      <!-- Trip Notes -->
+    <!-- HEADER (fixed) -->
+    <header class="mb-6 flex-shrink-0" style="display: flex; justify-content: space-between; align-items: flex-start;">
       <div>
-        <h2 class="text-2xl font-semibold text-gray-900 mb-4">Your Trip Notes</h2>
-        <%= form.text_area :original_text, rows: 16, class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-gray-800 leading-relaxed", placeholder: "New York City\nGive me 5 great cocktail bars\nFive Great Cocktail Bars to Try on Your Next Night Out:\n1. The Up & Up is a low-key, high-end cocktail bar in the West Village...\n2. The Raines Law Room at The William (Lounge)...\n3. The Rum House...\n4. Mother's Ruin..." %>
-        <p class="text-sm text-gray-500 mt-2">Paste your trip notes or itinerary. We'll extract places and add them to your map automatically.</p>
+        <h1 class="text-4xl font-bold text-gray-800 mb-2">Carnet de Voyage</h1>
+        <p class="text-sm text-gray-500">Transform your travel notes into interactive maps</p>
       </div>
-
-      <!-- Hidden fields for description and privacy -->
-      <%= form.hidden_field :description %>
-      <%= form.hidden_field :privacy, value: 'shared_with_link' %>
-
-      <!-- Submit Button -->
-      <div class="flex gap-3">
-        <%= form.submit "Generate Map", class: "px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium cursor-pointer" %>
-        <%= link_to "Cancel", maps_path, class: "px-8 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition" %>
+      <div style="display: flex; gap: 8px;">
+        <%= link_to "← Back to Maps", maps_path, class: "text-sm text-blue-600 hover:text-blue-800" %>
       </div>
+    </header>
+
+    <% if @map.errors.any? %>
+      <div class="mb-4 p-3 flex-shrink-0" style="background-color: #fef2f2; border: 1px solid #fca5a5; border-radius: 0.125rem;">
+        <p class="font-medium" style="font-size: 0.875rem; color: #991b1b;"><%= pluralize(@map.errors.count, "error") %> prevented this map from being saved:</p>
+        <ul class="mt-2 text-sm list-disc list-inside" style="color: #991b1b;">
+          <% @map.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <!-- Destination -->
+    <div class="mb-4 p-3 flex-shrink-0" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 0.125rem;">
+      <label style="font-size: 0.875rem; color: #1e40af; font-weight: 600;">📍 Destination:</label>
+      <%= form_with model: @map, html: { style: "margin: 0;" } do |form| %>
+        <%= form.text_field :title, style: "width: 100%; margin-top: 8px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 0.125rem; font-size: 0.875rem;", placeholder: "New York City, USA" %>
+    </div>
+
+    <!-- Paste Your Text heading -->
+    <h2 class="text-xl font-semibold mb-4 text-gray-700 flex-shrink-0">Paste Your Text</h2>
+
+    <!-- Hidden fields -->
+    <%= form.hidden_field :description %>
+    <%= form.hidden_field :privacy, value: 'shared_with_link' %>
+
+    <!-- Form with textarea and button (fills remaining space) -->
+    <div class="flex-1 flex flex-col min-h-0">
+      <%= form.text_area :original_text, class: "flex-1 p-4 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white text-gray-900 min-h-0", style: "border-radius: 0.125rem;", placeholder: "Paste text containing place names, addresses, or landmarks...\n\nExample:\nNew York City\nGive me 5 great cocktail bars\n\n1. The Up & Up is a cocktail bar in the West Village...\n2. The Raines Law Room at The William..." %>
+      <%= form.submit "Extract & Map Places", class: "mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 transition duration-200 shadow-md flex-shrink-0", style: "border-radius: 0.125rem; border: none;" %>
+    </div>
     <% end %>
   </div>
 
+  <!-- RIGHT SIDE: 60% width - Map with Tokyo center -->
+  <div style="width: 60%; position: relative; overflow: hidden;">
+    <div id="preview-map" style="width: 100%; height: 100vh;"></div>
+  </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const mapboxToken = document.querySelector('meta[name="mapbox-token"]').content;
+
+    if (typeof mapboxgl !== 'undefined') {
+      mapboxgl.accessToken = mapboxToken;
+
+      const map = new mapboxgl.Map({
+        container: 'preview-map',
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: [139.6917, 35.6895], // Tokyo coordinates
+        zoom: 11
+      });
+
+      // Add navigation controls
+      map.addControl(new mapboxgl.NavigationControl());
+    }
+  });
+</script>
