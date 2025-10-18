@@ -34,22 +34,6 @@
           <% end %>
         </div>
 
-        <!-- Share Options (compact) -->
-        <% if @map.places.any? %>
-          <div class="mt-6 pt-6 border-t border-gray-200">
-            <p class="text-sm font-medium text-gray-700 mb-2">Share this map:</p>
-            <div class="flex flex-wrap gap-2">
-              <button onclick="copyToClipboard('<%= map_url(@map) %>')" class="text-xs px-3 py-1.5 bg-white border border-gray-300 rounded hover:bg-gray-50 transition">
-                Copy Link
-              </button>
-              <% if @map.google_maps_url.present? %>
-                <%= link_to "Google Maps", @map.google_maps_url, target: "_blank", class: "text-xs px-3 py-1.5 bg-white border border-gray-300 rounded hover:bg-gray-50 transition" %>
-              <% end %>
-              <%= link_to "PDF", map_path(@map, format: :pdf), class: "text-xs px-3 py-1.5 bg-white border border-gray-300 rounded hover:bg-gray-50 transition" %>
-            </div>
-            <p class="text-xs text-gray-500 mt-2" id="copy-feedback"></p>
-          </div>
-        <% end %>
 
         <!-- Edit/Delete buttons for owner -->
         <% if user_signed_in? && @map.creator == current_user %>
@@ -73,20 +57,3 @@
   </div>
 </div>
 
-<script>
-  function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(function() {
-      const feedback = document.getElementById('copy-feedback');
-      feedback.textContent = '✓ Link copied!';
-      feedback.classList.add('text-green-600');
-      setTimeout(() => {
-        feedback.textContent = '';
-        feedback.classList.remove('text-green-600');
-      }, 3000);
-    }, function(err) {
-      const feedback = document.getElementById('copy-feedback');
-      feedback.textContent = '✗ Failed to copy';
-      feedback.classList.add('text-red-600');
-    });
-  }
-</script>
