@@ -1,59 +1,45 @@
-<div class="min-h-screen bg-white">
-  <!-- Header -->
-  <div class="border-b border-gray-200">
-    <div class="max-w-7xl mx-auto px-6 py-6">
-      <h1 class="text-4xl font-bold text-gray-900">Carnet de Voyage</h1>
-      <p class="text-gray-600 mt-1">Transform your travel notes into interactive maps</p>
+<div style="display: flex; height: 100vh; overflow: hidden;">
+  <!-- LEFT SIDE: 40% width -->
+  <div style="width: 40%; display: flex; flex-direction: column; background-color: white; padding: 24px;">
+
+    <!-- HEADER (fixed) -->
+    <header class="mb-6 flex-shrink-0" style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div>
+        <h1 class="text-4xl font-bold text-gray-800 mb-2">Carnet de Voyage</h1>
+        <p class="text-sm text-gray-500">Transform your travel notes into interactive maps</p>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <%= link_to "← Back to Maps", maps_path, class: "text-sm text-blue-600 hover:text-blue-800" %>
+        <% if user_signed_in? && @map.creator == current_user %>
+          <%= link_to "Edit", edit_map_path(@map), class: "text-sm px-4 py-2 bg-gray-200 text-gray-800 hover:bg-gray-300 transition" %>
+          <%= button_to "Delete", @map, method: :delete, data: { turbo_confirm: "Are you sure?" }, class: "text-sm px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition" %>
+        <% end %>
+      </div>
+    </header>
+
+    <!-- Destination -->
+    <% if @map.title.present? %>
+      <div class="mb-4 p-3 flex-shrink-0" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 0.125rem;"><p style="font-size: 0.875rem; color: #1e40af;"><span style="font-weight: 600;">📍 Destination:</span> <%= @map.title %></p></div>
+    <% end %>
+
+    <!-- Your Trip Notes -->
+    <div style="display: flex; flex-direction: column; flex: 1; min-height: 0; margin-bottom: 16px;">
+      <h2 class="text-xl font-semibold mb-4 text-gray-700 flex-shrink-0">Your Trip Notes</h2>
+      <% if @map.original_text.present? %>
+        <div class="text-gray-800 leading-relaxed" style="border: 1px solid #d1d5db; border-radius: 0.125rem; padding: 16px; overflow-y: auto; flex: 1;">
+          <%= highlight_place_names(simple_format(@map.original_text), @map.places) %>
+        </div>
+      <% else %>
+        <p class="text-gray-500">No trip notes available.</p>
+      <% end %>
     </div>
+
+    <!-- Footer Space (5vh) -->
+    <div style="height: 5vh; flex-shrink: 0;"></div>
   </div>
 
-  <!-- Main Content -->
-  <div class="flex main-content" style="height: calc(100vh - 120px);">
-    <!-- Left Sidebar - Trip Notes -->
-    <div class="w-[40%] flex-shrink-0 left-sidebar border-r border-gray-200 overflow-y-auto bg-gray-50">
-      <div class="p-6">
-        <!-- Destination -->
-        <% if @map.title.present? %>
-          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <div class="flex items-center gap-2">
-              <span class="text-blue-600">📍</span>
-              <span class="font-medium text-gray-900">Destination: <%= @map.title %></span>
-            </div>
-          </div>
-        <% end %>
-
-        <!-- Your Trip Notes -->
-        <div>
-          <h2 class="text-2xl font-semibold text-gray-900 mb-4">Your Trip Notes</h2>
-          <% if @map.original_text.present? %>
-            <div class="text-gray-800 leading-relaxed">
-              <%= highlight_place_names(simple_format(@map.original_text), @map.places) %>
-            </div>
-          <% else %>
-            <p class="text-gray-500">No trip notes available.</p>
-          <% end %>
-        </div>
-
-
-        <!-- Edit/Delete buttons for owner -->
-        <% if user_signed_in? && @map.creator == current_user %>
-          <div class="mt-6 pt-6 border-t border-gray-200 flex gap-2">
-            <%= link_to "Edit", edit_map_path(@map), class: "text-sm px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition" %>
-            <%= button_to "Delete", @map, method: :delete, data: { turbo_confirm: "Are you sure?" }, class: "text-sm px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition" %>
-          </div>
-        <% end %>
-
-        <!-- Back link -->
-        <div class="mt-6">
-          <%= link_to "← Back to Maps", maps_path, class: "text-sm text-blue-600 hover:text-blue-800" %>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right Side - Map -->
-    <div class="relative right-map w-[60%] h-full">
-      <div id="map" class="w-full h-full" data-controller="map" data-map-places-value="<%= @map.places.to_json(only: [:id, :name, :latitude, :longitude, :address, :place_type, :context]) %>"></div>
-    </div>
+  <!-- RIGHT SIDE: 60% width -->
+  <div style="width: 60%; position: relative; overflow: hidden;">
+    <div id="map" style="width: 100%; height: 100vh;" data-controller="map" data-map-places-value="<%= @map.places.to_json(only: [:id, :name, :latitude, :longitude, :address, :place_type, :context]) %>"></div>
   </div>
 </div>
-
