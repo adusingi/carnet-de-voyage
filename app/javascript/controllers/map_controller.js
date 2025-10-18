@@ -10,6 +10,8 @@ export default class extends Controller {
   connect() {
     console.log("Map controller connected!")
     console.log("Places data:", this.placesValue)
+    console.log("Map element:", this.element)
+    console.log("Map element dimensions:", this.element.offsetWidth, this.element.offsetHeight)
 
     // Get Mapbox token from meta tag (we'll add this to layout)
     const token = document.querySelector('meta[name="mapbox-token"]')?.content
@@ -27,9 +29,23 @@ export default class extends Controller {
     const places = this.placesValue
 
     if (!places || places.length === 0) {
-      this.element.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">No places to display on map</div>'
+      // Show a default map centered on a general location
+      this.showDefaultMap()
       return
     }
+
+    // Ensure the map container has proper dimensions
+    if (this.element.offsetWidth === 0 || this.element.offsetHeight === 0) {
+      console.warn("Map container has zero dimensions, waiting for layout...")
+      setTimeout(() => this.initializeMap(), 100)
+      return
+    }
+
+    this.initializeMap()
+  }
+
+  initializeMap() {
+    const places = this.placesValue
 
     const bounds = new mapboxgl.LngLatBounds()
     places.forEach(place => {
@@ -40,6 +56,8 @@ export default class extends Controller {
 
     // Initialize map
     console.log("Creating map with bounds:", bounds)
+    console.log("Container dimensions:", this.element.offsetWidth, this.element.offsetHeight)
+    
     try {
       this.map = new mapboxgl.Map({
         container: this.element,
@@ -57,7 +75,11 @@ export default class extends Controller {
         console.log("Map loaded event fired")
         // Force resize in case container wasn't properly sized
         this.map.resize()
+        this.addMarkers(places)
       })
+
+      // Handle window resize
+      window.addEventListener('resize', this.handleResize)
 
       // Add navigation controls
       this.map.addControl(new mapboxgl.NavigationControl(), 'top-right')
@@ -66,7 +88,32 @@ export default class extends Controller {
       this.element.innerHTML = `<div class="flex items-center justify-center h-full text-red-500">Error: ${error.message}</div>`
       return
     }
+  }
 
+  showDefaultMap() {
+    try {
+      this.map = new mapboxgl.Map({
+        container: this.element,
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: [0, 20], // Default center
+        zoom: 2
+      })
+
+      this.map.on('load', () => {
+        this.map.resize()
+      })
+
+      this.map.addControl(new mapboxgl.NavigationControl(), 'top-right')
+      
+      // Show a message overlay
+      this.element.innerHTML += '<div class="absolute top-4 left-4 bg-white bg-opacity-90 p-3 rounded-lg shadow-lg text-sm text-gray-600">No places to display on map</div>'
+    } catch (error) {
+      console.error("Error creating default map:", error)
+      this.element.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500 bg-gray-100 rounded-lg">Map unavailable</div>'
+    }
+  }
+
+  addMarkers(places) {
     // Add markers for each place
     places.forEach((place, index) => {
       if (!place.longitude || !place.latitude) return
@@ -110,6 +157,14 @@ export default class extends Controller {
   disconnect() {
     if (this.map) {
       this.map.remove()
+    }
+    // Clean up resize listener
+    window.removeEventListener('resize', this.handleResize)
+  }
+
+  handleResize = () => {
+    if (this.map) {
+      this.map.resize()
     }
   }
 }

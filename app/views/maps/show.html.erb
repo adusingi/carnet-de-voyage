@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-white flex flex-col">
+<div class="min-h-screen bg-white">
   <!-- Header -->
   <div class="border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-6 py-6">
@@ -8,9 +8,9 @@
   </div>
 
   <!-- Main Content -->
-  <div class="flex-1 flex">
+  <div class="flex main-content" style="height: calc(100vh - 120px);">
     <!-- Left Sidebar - Trip Notes -->
-    <div class="w-[600px] border-r border-gray-200 overflow-y-auto bg-gray-50">
+    <div class="w-[40%] flex-shrink-0 left-sidebar border-r border-gray-200 overflow-y-auto bg-gray-50">
       <div class="p-6">
         <!-- Destination -->
         <% if @map.title.present? %>
@@ -26,8 +26,8 @@
         <div>
           <h2 class="text-2xl font-semibold text-gray-900 mb-4">Your Trip Notes</h2>
           <% if @map.original_text.present? %>
-            <div class="bg-white border border-gray-200 rounded-lg p-4">
-              <div class="text-gray-800 leading-relaxed whitespace-pre-wrap"><%= simple_format(@map.original_text) %></div>
+            <div class="text-gray-800 leading-relaxed">
+              <%= highlight_place_names(simple_format(@map.original_text), @map.places) %>
             </div>
           <% else %>
             <p class="text-gray-500">No trip notes available.</p>
@@ -67,15 +67,8 @@
     </div>
 
     <!-- Right Side - Map -->
-    <div class="flex-1 relative">
-      <div id="map" class="absolute inset-0" data-controller="map" data-map-places-value="<%= @map.places.to_json(only: [:id, :name, :latitude, :longitude, :address, :place_type, :context]) %>"></div>
-    </div>
-  </div>
-
-  <!-- Footer -->
-  <div class="border-t border-gray-200">
-    <div class="max-w-7xl mx-auto px-6 py-4">
-      <p class="text-sm text-gray-500 text-center">Powered by OpenAI GPT-4 & Mapbox</p>
+    <div class="relative right-map w-[60%] h-full">
+      <div id="map" class="w-full h-full" data-controller="map" data-map-places-value="<%= @map.places.to_json(only: [:id, :name, :latitude, :longitude, :address, :place_type, :context]) %>"></div>
     </div>
   </div>
 </div>
