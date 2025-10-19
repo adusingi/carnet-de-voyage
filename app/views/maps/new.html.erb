@@ -45,9 +45,14 @@
 
         <%= form.submit "Extract & Map Places",
             disabled: true,
-            data: { submit_button_target: "button" },
+            data: { submit_button_target: "button", loading_text: "Processing..." },
             class: "bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold transition duration-200 flex-shrink-0",
-            style: "border-radius: 0.125rem; margin-top: 16px; padding: 12px 24px; width: 100%; border: none;" %>
+            style: "border-radius: 0.125rem; margin-top: 16px; padding: 12px 24px; width: 100%; border: none; position: relative;" %>
+
+        <!-- Loading Spinner (hidden by default) -->
+        <div data-loading-spinner style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+          <div style="border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid #ffffff; border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite;"></div>
+        </div>
       </div>
     <% end %>
 
@@ -60,6 +65,13 @@
     <div id="preview-map" style="width: 100%; height: 100vh;"></div>
   </div>
 </div>
+
+<style>
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -80,32 +92,63 @@
     }
 
     // Button disabled state functionality
-    const textarea = document.querySelector('[data-textarea-target="input"]');
-    const submitButton = document.querySelector('[data-submit-button-target="button"]');
+    function initializeButtonState() {
+      const textarea = document.querySelector('[data-textarea-target="input"]');
+      const submitButton = document.querySelector('[data-submit-button-target="button"]');
+      const loadingSpinner = document.querySelector('[data-loading-spinner]');
+      const form = submitButton ? submitButton.closest('form') : null;
 
-    if (textarea && submitButton) {
-      // Function to check if textarea has content
-      function updateButtonState() {
-        const hasContent = textarea.value.trim().length > 0;
-        submitButton.disabled = !hasContent;
+      if (textarea && submitButton) {
+        // Store original button text
+        const originalText = submitButton.value;
+        const loadingText = submitButton.dataset.loadingText || 'Processing...';
 
-        // Update styles based on disabled state
-        if (hasContent) {
-          submitButton.style.backgroundColor = '#2563eb'; // blue-600
-          submitButton.style.cursor = 'pointer';
-          submitButton.style.color = '#ffffff'; // white text
-        } else {
-          submitButton.style.backgroundColor = '#9ca3af'; // gray-400
-          submitButton.style.cursor = 'not-allowed';
-          submitButton.style.color = '#ffffff'; // white text
+        // Function to check if textarea has content
+        function updateButtonState() {
+          const hasContent = textarea.value.trim().length > 0;
+          submitButton.disabled = !hasContent;
+
+          // Update styles based on disabled state
+          if (hasContent) {
+            submitButton.style.backgroundColor = '#2563eb'; // blue-600
+            submitButton.style.cursor = 'pointer';
+            submitButton.style.color = '#ffffff'; // white text
+          } else {
+            submitButton.style.backgroundColor = '#9ca3af'; // gray-400
+            submitButton.style.cursor = 'not-allowed';
+            submitButton.style.color = '#ffffff'; // white text
+          }
+        }
+
+        // Check on input
+        textarea.addEventListener('input', updateButtonState);
+
+        // Check immediately on initialization
+        updateButtonState();
+
+        // Handle form submission - show loading state
+        if (form) {
+          form.addEventListener('submit', function(e) {
+            // Show loading state
+            submitButton.value = loadingText;
+            submitButton.disabled = true;
+            submitButton.style.backgroundColor = '#2563eb'; // Keep blue during loading
+            submitButton.style.cursor = 'wait';
+
+            // Optional: show spinner (uncomment if you want spinner instead of just text)
+            // if (loadingSpinner) {
+            //   loadingSpinner.style.display = 'block';
+            //   submitButton.style.color = 'transparent'; // Hide text to show spinner
+            // }
+          });
         }
       }
-
-      // Check on input
-      textarea.addEventListener('input', updateButtonState);
-
-      // Check on page load (in case there's pre-filled content)
-      updateButtonState();
     }
+
+    // Initialize button state
+    initializeButtonState();
+
+    // Also run on turbo:load for Turbo compatibility
+    document.addEventListener('turbo:load', initializeButtonState);
   });
 </script>
