@@ -1,2 +1,86 @@
-<h1>Maps#edit</h1>
-<p>Find me in app/views/maps/edit.html.erb</p>
+<div style="display: flex; height: 100vh; overflow: hidden;">
+  <!-- LEFT SIDE: 40% width -->
+  <div style="width: 40%; display: flex; flex-direction: column; background-color: white; padding: 24px;">
+
+    <!-- HEADER (fixed) -->
+    <header class="mb-6 flex-shrink-0" style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div>
+        <h1 class="text-4xl font-bold text-gray-800 mb-2">Carnet de Voyage</h1>
+        <p class="text-sm text-gray-500">Transform your travel notes into interactive maps</p>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <%= link_to "← Back to Map", @map, class: "text-sm text-blue-600 hover:text-blue-800" %>
+        <%= link_to "Cancel", @map, class: "text-sm px-4 py-2 bg-gray-200 text-gray-800 hover:bg-gray-300 transition" %>
+      </div>
+    </header>
+
+    <!-- Destination -->
+    <% if @map.title.present? %>
+      <div class="flex-shrink-0" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 0.125rem; padding: 12px; margin-bottom: 16px;"><p style="font-size: 0.875rem; color: #1e40af; margin: 0;"><span style="font-weight: 600;">📍 Destination:</span> <%= @map.title %></p></div>
+    <% end %>
+
+    <!-- Trip Notes Form -->
+    <div style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
+      <%= form_with model: @map, local: true, html: { style: "flex: 1; display: flex; flex-direction: column; min-height: 0;" } do |f| %>
+        <!-- Map Title -->
+        <div class="flex-shrink-0" style="margin-bottom: 12px; margin-top: 0;">
+          <%= f.text_field :title,
+              placeholder: "Enter notes title (e.g., New York Bars, Voyage à Paris)...",
+              style: "width: 100%; padding: 16px; border: 1px solid #d1d5db; border-radius: 0.125rem; font-size: 18px; font-weight: 600; color: #374151; background-color: #ffffff; outline: none; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" %>
+        </div>
+
+        <%= f.text_area :original_text,
+            placeholder: "Paste text containing place names, addresses, or landmarks...\n\nExample:\nNew York City\nGive me 5 great cocktail bars\n\n1. The Up & Up is a cocktail bar in the West Village...\n2. The Raines Law Room at The William...",
+            style: "flex: 1; padding: 16px; border: 1px solid #d1d5db; border-radius: 0.125rem; resize: none; background-color: #ffffff; color: #111827; width: 100%; box-sizing: border-box; font-size: 15px; line-height: 1.6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; outline: none; overflow-y: auto;",
+            data: { textarea_target: "input" } %>
+
+        <%= f.submit "Extract & Map Places",
+            disabled: true,
+            data: { submit_button_target: "button" },
+            class: "bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold transition duration-200 flex-shrink-0",
+            style: "border-radius: 0.125rem; margin-top: 16px; padding: 12px 24px; width: 100%; border: none;" %>
+      <% end %>
+    </div>
+
+    <!-- Footer Space (5vh) -->
+    <div style="height: 5vh; flex-shrink: 0;"></div>
+  </div>
+
+  <!-- RIGHT SIDE: 60% width -->
+  <div style="width: 60%; position: relative; overflow: hidden;">
+    <div id="map" style="width: 100%; height: 100vh;" data-controller="map" data-map-places-value="<%= @map.places.to_json(only: [:id, :name, :latitude, :longitude, :address, :place_type, :context]) %>"></div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Button disabled state functionality
+    const textarea = document.querySelector('[data-textarea-target="input"]');
+    const submitButton = document.querySelector('[data-submit-button-target="button"]');
+
+    if (textarea && submitButton) {
+      // Function to check if textarea has content
+      function updateButtonState() {
+        const hasContent = textarea.value.trim().length > 0;
+        submitButton.disabled = !hasContent;
+
+        // Update styles based on disabled state
+        if (hasContent) {
+          submitButton.style.backgroundColor = '#2563eb'; // blue-600
+          submitButton.style.cursor = 'pointer';
+          submitButton.style.color = '#ffffff'; // white text
+        } else {
+          submitButton.style.backgroundColor = '#9ca3af'; // gray-400
+          submitButton.style.cursor = 'not-allowed';
+          submitButton.style.color = '#ffffff'; // white text
+        }
+      }
+
+      // Check on input
+      textarea.addEventListener('input', updateButtonState);
+
+      // Check on page load (in case there's pre-filled content)
+      updateButtonState();
+    }
+  });
+</script>

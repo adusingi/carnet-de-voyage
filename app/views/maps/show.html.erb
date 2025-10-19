@@ -19,18 +19,26 @@
 
     <!-- Destination -->
     <% if @map.title.present? %>
-      <div class="mb-4 p-3 flex-shrink-0" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 0.125rem;"><p style="font-size: 0.875rem; color: #1e40af;"><span style="font-weight: 600;">📍 Destination:</span> <%= @map.title %></p></div>
+      <div class="flex-shrink-0" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 0.125rem; padding: 12px; margin-bottom: 16px;"><p style="font-size: 0.875rem; color: #1e40af; margin: 0;"><span style="font-weight: 600;">📍 Destination:</span> <%= @map.title %></p></div>
     <% end %>
 
-    <!-- Your Trip Notes -->
-    <div style="display: flex; flex-direction: column; flex: 1; min-height: 0; margin-bottom: 16px;">
-      <h2 class="text-xl font-semibold mb-4 text-gray-700 flex-shrink-0">Your Trip Notes</h2>
+    <!-- Trip Notes Display -->
+    <div style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
+      <!-- Map Title -->
+      <% if @map.title.present? %>
+        <h2 class="flex-shrink-0" style="padding: 16px; margin-bottom: 12px; margin-top: 0; border: 1px solid #d1d5db; border-radius: 0.125rem; font-size: 18px; font-weight: 600; color: #374151; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+          <%= @map.title %>
+        </h2>
+      <% end %>
+
       <% if @map.original_text.present? %>
-        <div class="text-gray-800 leading-relaxed" style="border: 1px solid #d1d5db; border-radius: 0.125rem; padding: 16px; overflow-y: auto; flex: 1;">
-          <%= highlight_place_names(simple_format(@map.original_text), @map.places) %>
+        <div class="text-gray-800 leading-relaxed" style="flex: 1; border: 1px solid #d1d5db; border-radius: 0.125rem; padding: 16px; overflow-y: auto; background-color: #ffffff; font-size: 15px; line-height: 1.6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+          <%= simple_format(@map.original_text) %>
         </div>
       <% else %>
-        <p class="text-gray-500">No trip notes available.</p>
+        <div class="text-gray-500" style="flex: 1; border: 1px solid #d1d5db; border-radius: 0.125rem; padding: 16px; overflow-y: auto; background-color: #f9fafb;">
+          <p>No trip notes available. Click "Edit" to add your travel notes.</p>
+        </div>
       <% end %>
     </div>
 

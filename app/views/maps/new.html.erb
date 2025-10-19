@@ -24,26 +24,35 @@
       </div>
     <% end %>
 
-    <!-- Destination -->
-    <div class="mb-4 p-3 flex-shrink-0" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 0.125rem;">
-      <label style="font-size: 0.875rem; color: #1e40af; font-weight: 600;">📍 Destination:</label>
-      <%= form_with model: @map, html: { style: "margin: 0;" } do |form| %>
-        <%= form.text_field :title, style: "width: 100%; margin-top: 8px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 0.125rem; font-size: 0.875rem;", placeholder: "New York City, USA" %>
-    </div>
+    <%= form_with model: @map, local: true, html: { style: "flex: 1; display: flex; flex-direction: column; min-height: 0;" } do |form| %>
+      <!-- Map Title -->
+      <div class="flex-shrink-0" style="margin-bottom: 12px;">
+        <%= form.text_field :title,
+            placeholder: "Enter notes title (e.g., New York Bars, Voyage à Paris)...",
+            style: "width: 100%; padding: 16px; border: 1px solid #d1d5db; border-radius: 0.125rem; font-size: 18px; font-weight: 600; color: #374151; background-color: #ffffff; outline: none; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" %>
+      </div>
 
-    <!-- Paste Your Text heading -->
-    <h2 class="text-xl font-semibold mb-4 text-gray-700 flex-shrink-0">Paste Your Text</h2>
+      <!-- Trip Notes Form -->
+      <div style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
+        <%= form.text_area :original_text,
+            placeholder: "Paste text containing place names, addresses, or landmarks...\n\nExample:\nNew York City\nGive me 5 great cocktail bars\n\n1. The Up & Up is a cocktail bar in the West Village...\n2. The Raines Law Room at The William...",
+            style: "flex: 1; padding: 16px; border: 1px solid #d1d5db; border-radius: 0.125rem; resize: none; background-color: #ffffff; color: #111827; width: 100%; box-sizing: border-box; font-size: 15px; line-height: 1.6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; outline: none; overflow-y: auto;",
+            data: { textarea_target: "input" } %>
 
-    <!-- Hidden fields -->
-    <%= form.hidden_field :description %>
-    <%= form.hidden_field :privacy, value: 'shared_with_link' %>
+        <!-- Hidden fields -->
+        <%= form.hidden_field :description %>
+        <%= form.hidden_field :privacy, value: 'shared_with_link' %>
 
-    <!-- Form with textarea and button (fills remaining space) -->
-    <div class="flex-1 flex flex-col min-h-0">
-      <%= form.text_area :original_text, class: "flex-1 p-4 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white text-gray-900 min-h-0", style: "border-radius: 0.125rem;", placeholder: "Paste text containing place names, addresses, or landmarks...\n\nExample:\nNew York City\nGive me 5 great cocktail bars\n\n1. The Up & Up is a cocktail bar in the West Village...\n2. The Raines Law Room at The William..." %>
-      <%= form.submit "Extract & Map Places", class: "mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 transition duration-200 shadow-md flex-shrink-0", style: "border-radius: 0.125rem; border: none;" %>
-    </div>
+        <%= form.submit "Extract & Map Places",
+            disabled: true,
+            data: { submit_button_target: "button" },
+            class: "bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold transition duration-200 flex-shrink-0",
+            style: "border-radius: 0.125rem; margin-top: 16px; padding: 12px 24px; width: 100%; border: none;" %>
+      </div>
     <% end %>
+
+    <!-- Footer Space (5vh) -->
+    <div style="height: 5vh; flex-shrink: 0;"></div>
   </div>
 
   <!-- RIGHT SIDE: 60% width - Map with Tokyo center -->
@@ -68,6 +77,35 @@
 
       // Add navigation controls
       map.addControl(new mapboxgl.NavigationControl());
+    }
+
+    // Button disabled state functionality
+    const textarea = document.querySelector('[data-textarea-target="input"]');
+    const submitButton = document.querySelector('[data-submit-button-target="button"]');
+
+    if (textarea && submitButton) {
+      // Function to check if textarea has content
+      function updateButtonState() {
+        const hasContent = textarea.value.trim().length > 0;
+        submitButton.disabled = !hasContent;
+
+        // Update styles based on disabled state
+        if (hasContent) {
+          submitButton.style.backgroundColor = '#2563eb'; // blue-600
+          submitButton.style.cursor = 'pointer';
+          submitButton.style.color = '#ffffff'; // white text
+        } else {
+          submitButton.style.backgroundColor = '#9ca3af'; // gray-400
+          submitButton.style.cursor = 'not-allowed';
+          submitButton.style.color = '#ffffff'; // white text
+        }
+      }
+
+      // Check on input
+      textarea.addEventListener('input', updateButtonState);
+
+      // Check on page load (in case there's pre-filled content)
+      updateButtonState();
     }
   });
 </script>
