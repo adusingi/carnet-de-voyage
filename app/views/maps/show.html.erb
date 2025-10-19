@@ -1,6 +1,6 @@
-<div style="display: flex; height: 100vh; overflow: hidden;">
+<div class="main-container" style="display: flex; height: 100vh; overflow: hidden;">
   <!-- LEFT SIDE: 40% width -->
-  <div style="width: 40%; display: flex; flex-direction: column; background-color: white; padding: 24px;">
+  <div class="notes-panel" style="width: 40%; display: flex; flex-direction: column; background-color: white; padding: 24px;">
 
     <!-- HEADER (fixed) -->
     <header class="mb-6 flex-shrink-0" style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -8,7 +8,7 @@
         <h1 class="text-4xl font-bold text-gray-800 mb-2">Carnet de Voyage</h1>
         <p class="text-sm text-gray-500">Transform your travel notes into interactive maps</p>
       </div>
-      <div style="display: flex; gap: 8px;">
+      <div class="header-actions" style="display: flex; gap: 8px;">
         <%= link_to "← Back to Maps", maps_path, class: "text-sm text-blue-600 hover:text-blue-800" %>
         <% if user_signed_in? && @map.creator == current_user %>
           <%= link_to "Edit", edit_map_path(@map), class: "text-sm px-4 py-2 bg-gray-200 text-gray-800 hover:bg-gray-300 transition" %>
@@ -47,10 +47,63 @@
   </div>
 
   <!-- RIGHT SIDE: 60% width -->
-  <div style="width: 60%; position: relative; overflow: hidden;">
+  <div class="map-panel" style="width: 60%; position: relative; overflow: hidden;">
     <div id="map" style="width: 100%; height: 100vh;" data-controller="map" data-map-places-value="<%= @map.places.to_json(only: [:id, :name, :latitude, :longitude, :address, :place_type, :context]) %>"></div>
   </div>
 </div>
+
+<style>
+  /* Mobile Responsive Styles */
+  @media (max-width: 1023px) {
+    /* Stack vertically on mobile */
+    .main-container {
+      flex-direction: column !important;
+      height: auto !important;
+    }
+
+    /* Left panel - full width on mobile */
+    .notes-panel {
+      width: 100% !important;
+      max-height: none !important;
+      overflow-y: visible !important;
+      padding: 16px !important;
+    }
+
+    /* Right panel - full width on mobile, fixed height */
+    .map-panel {
+      width: 100% !important;
+      height: 400px !important;
+      position: relative !important;
+    }
+
+    .map-panel #map {
+      height: 400px !important;
+    }
+
+    /* Smaller text on mobile */
+    .notes-panel h1 {
+      font-size: 1.5rem !important;
+    }
+
+    /* Stack header buttons */
+    .header-actions {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 8px !important;
+    }
+  }
+
+  @media (max-width: 640px) {
+    /* Even smaller on very small screens */
+    .notes-panel {
+      padding: 12px !important;
+    }
+
+    .notes-panel h1 {
+      font-size: 1.25rem !important;
+    }
+  }
+</style>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {

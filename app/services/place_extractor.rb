@@ -16,15 +16,43 @@ class PlaceExtractor
           messages: [
             {
               role: 'system',
-              content: 'You are a travel planning assistant that extracts location information from trip notes. You must respond with valid JSON only.'
+              content: 'You are a travel planning assistant that extracts location information from trip notes. You must respond with valid JSON matching the provided schema.'
             },
             {
               role: 'user',
               content: build_prompt
             }
           ],
-          response_format: { type: 'json_object' },
-          temperature: 0.2
+          response_format: {
+            type: 'json_schema',
+            json_schema: {
+              name: 'place_extraction',
+              strict: true,
+              schema: {
+                type: 'object',
+                properties: {
+                  destination: { type: 'string' },
+                  places: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        name: { type: 'string' },
+                        context: { type: 'string' },
+                        type: { type: 'string' }
+                      },
+                      required: ['name', 'context', 'type'],
+                      additionalProperties: false
+                    }
+                  }
+                },
+                required: ['destination', 'places'],
+                additionalProperties: false
+              }
+            }
+          },
+          temperature: 0.2,
+          max_tokens: 800  # Limit response size to prevent runaway costs
         }
       )
 
@@ -53,10 +81,25 @@ class PlaceExtractor
       }
     rescue JSON::ParserError => e
       Rails.logger.error "Failed to parse OpenAI response: #{e.message}"
-      { success: false, error: 'Failed to parse extracted places' }
+      { success: false, error: 'Failed to parse extracted places. Please try again.' }
+    rescue Faraday::TimeoutError => e
+      Rails.logger.error "OpenAI API timeout: #{e.message}"
+      { success: false, error: 'Request timed out. Please try again.' }
+    rescue Faraday::ConnectionFailed => e
+      Rails.logger.error "Failed to connect to OpenAI: #{e.message}"
+      { success: false, error: 'Could not connect to the AI service. Please check your internet connection.' }
+    rescue OpenAI::Error => e
+      Rails.logger.error "OpenAI API error: #{e.message}"
+      if e.message.include?('rate_limit')
+        { success: false, error: 'AI service is busy. Please try again in a moment.' }
+      elsif e.message.include?('invalid_api_key')
+        { success: false, error: 'AI service configuration error. Please contact support.' }
+      else
+        { success: false, error: 'AI service error. Please try again.' }
+      end
     rescue => e
-      Rails.logger.error "Error extracting places: #{e.message}"
-      { success: false, error: e.message }
+      Rails.logger.error "Unexpected error extracting places: #{e.class} - #{e.message}"
+      { success: false, error: 'An unexpected error occurred. Please try again.' }
     end
   end
 

@@ -1,3 +1,8 @@
+<% content_for :head do %>
+  <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet' />
+  <script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
+<% end %>
+
 <div data-turbo="false" style="display: flex; height: 100vh; overflow: hidden;">
   <!-- LEFT SIDE: 40% width -->
   <div style="width: 40%; display: flex; flex-direction: column; background-color: white; padding: 24px;">
@@ -75,9 +80,11 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    const mapboxToken = document.querySelector('meta[name="mapbox-token"]').content;
+    // Initialize Mapbox map (independent of button functionality)
+    const mapboxTokenMeta = document.querySelector('meta[name="mapbox-token"]');
 
-    if (typeof mapboxgl !== 'undefined') {
+    if (mapboxTokenMeta && mapboxTokenMeta.content && typeof mapboxgl !== 'undefined') {
+      const mapboxToken = mapboxTokenMeta.content;
       mapboxgl.accessToken = mapboxToken;
 
       const map = new mapboxgl.Map({
@@ -89,9 +96,11 @@
 
       // Add navigation controls
       map.addControl(new mapboxgl.NavigationControl());
+    } else {
+      console.warn('Mapbox not initialized: token or library missing');
     }
 
-    // Button disabled state functionality
+    // Button disabled state functionality (runs regardless of Mapbox status)
     function initializeButtonState() {
       const textarea = document.querySelector('[data-textarea-target="input"]');
       const submitButton = document.querySelector('[data-submit-button-target="button"]');

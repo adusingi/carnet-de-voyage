@@ -83,23 +83,25 @@ module MapsHelper
     core = decoded.gsub(/\s+(Garden|Museum|Temple|Market|Street|Shrine|Park|Castle|Palace|Tower|Station|Hotel|Restaurant|Bar|Cafe|Scramble)$/i, '')
     names << core if core != decoded
 
-    # Strategy 3: Get hyphenated compounds (like "Edo-Tokyo", "Senso-ji")
-    decoded.scan(/([A-Z][a-z]+-[A-Z][a-z]+)/i).flatten.each { |compound| names << compound }
+    # Strategy 3: Get hyphenated compounds (like "Edo-Tokyo", "Senso-ji", "Café-Restaurant")
+    # Use Unicode character classes to support accented characters (É, è, ô, etc.)
+    decoded.scan(/([[:upper:]][[:lower:]]+-[[:upper:]][[:lower:]]+)/i).flatten.each { |compound| names << compound }
 
     # Strategy 4: Extract all capitalized words (proper nouns)
-    # This will get "Hamarikyu", "Tsukiji", "Edo", "Tokyo", "Senso", "Nakamise", "Shibuya"
+    # This will get "Hamarikyu", "Tsukiji", "Edo", "Tokyo", "Senso", "Nakamise", "Shibuya", "Étoile", "Château"
     # But exclude generic words
-    decoded.scan(/\b([A-Z][a-z]{2,})\b/).flatten.each do |word|
+    # Unicode support: [[:upper:]] matches É, Ç, Ł, etc.; [[:lower:]] matches é, è, ô, etc.
+    decoded.scan(/\b([[:upper:]][[:lower:]]{2,})\b/).flatten.each do |word|
       names << word unless generic_words.include?(word)
     end
 
     # Strategy 5: Get combinations of consecutive capitalized words
-    # This handles "Shibuya Scramble" -> "Shibuya Scramble"
+    # This handles "Shibuya Scramble" -> "Shibuya Scramble", "Arc de Triomphe" -> "Arc"
     words = decoded.split(/\s+/)
     words.each_with_index do |word, i|
-      if word =~ /^[A-Z][a-z]{2,}$/
+      if word =~ /^[[:upper:]][[:lower:]]{2,}$/
         # Also try combining with next word if it's also capitalized
-        if i + 1 < words.length && words[i + 1] =~ /^[A-Z]/
+        if i + 1 < words.length && words[i + 1] =~ /^[[:upper:]]/
           names << "#{word} #{words[i + 1]}"
         end
       end

@@ -1,6 +1,7 @@
 class MapsController < ApplicationController
   before_action :authenticate_user!, except: [:index, :show]
   before_action :set_map, only: [:show, :edit, :update, :destroy]
+  before_action :authorize_map_view, only: [:show]
   before_action :authorize_map, only: [:edit, :update, :destroy]
 
   def index
@@ -138,6 +139,20 @@ class MapsController < ApplicationController
 
   def set_map
     @map = Map.find(params[:id])
+  end
+
+  def authorize_map_view
+    # Allow access if map is publicly visible
+    return if @map.privacy_publicly_visible?
+
+    # Allow access if map is shared_with_link (anyone with the link can view)
+    return if @map.privacy_shared_with_link?
+
+    # Allow access if user is signed in and is the owner
+    return if user_signed_in? && @map.creator == current_user
+
+    # Otherwise, deny access
+    redirect_to maps_path, alert: "You are not authorized to view this map."
   end
 
   def authorize_map

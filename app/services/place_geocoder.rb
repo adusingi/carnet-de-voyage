@@ -12,14 +12,14 @@ class PlaceGeocoder
     return [] if @places.blank?
 
     Rails.logger.info "=== GEOCODING STARTED ==="
-    Rails.logger.info "Google API Key present: #{@google_api_key.present?}"
+    Rails.logger.debug "Google API Key present: #{@google_api_key.present?}"
     Rails.logger.info "Places to geocode: #{@places.count}"
-    Rails.logger.info "Destination: #{@destination}"
+    Rails.logger.debug "Destination: #{@destination}"
 
     # Get destination coordinates for proximity bias
     proximity_coords = @destination.present? ? get_destination_coords(@destination) : nil
 
-    Rails.logger.info "Proximity coords: #{proximity_coords}" if proximity_coords
+    Rails.logger.debug "Proximity coords: #{proximity_coords}" if proximity_coords
 
     # Geocode all places in parallel
     geocoded = @places.map do |place|
@@ -54,7 +54,7 @@ class PlaceGeocoder
   end
 
   def geocode_with_google(place_name, proximity_coords = nil)
-    Rails.logger.info "Geocoding place: #{place_name}"
+    Rails.logger.debug "Geocoding place: #{place_name}"
 
     unless @google_api_key.present?
       Rails.logger.error "Google API key is missing!"
@@ -71,27 +71,48 @@ class PlaceGeocoder
       url += "&location=#{proximity_coords[:latitude]},#{proximity_coords[:longitude]}&radius=50000"
     end
 
-    Rails.logger.info "Google Geocoding URL: #{url.gsub(@google_api_key, 'HIDDEN')}"
+    Rails.logger.debug "Google Geocoding URL: #{url.gsub(@google_api_key, 'HIDDEN')}"
 
     response = HTTParty.get(url)
     data = JSON.parse(response.body, symbolize_names: true)
 
-    Rails.logger.info "Google API Response Status: #{data[:status]}"
+    Rails.logger.debug "Google API Response Status: #{data[:status]}"
 
-    if data[:status] == 'OK' && data[:results]&.any?
-      result = data[:results].first
-      location = result[:geometry][:location]
+    # Handle different Google Geocoding API status codes explicitly
+    case data[:status]
+    when 'OK'
+      if data[:results]&.any?
+        result = data[:results].first
+        location = result[:geometry][:location]
 
-      Rails.logger.info "✓ Successfully geocoded #{place_name}: #{location[:lat]}, #{location[:lng]}"
+        Rails.logger.debug "✓ Successfully geocoded #{place_name}: #{location[:lat]}, #{location[:lng]}"
 
-      {
-        latitude: location[:lat],
-        longitude: location[:lng],
-        address: result[:formatted_address]
-      }
+        {
+          latitude: location[:lat],
+          longitude: location[:lng],
+          address: result[:formatted_address]
+        }
+      else
+        Rails.logger.warn "No results found for '#{place_name}'"
+        nil
+      end
+    when 'ZERO_RESULTS'
+      Rails.logger.debug "No location found for '#{place_name}'"
+      nil
+    when 'OVER_QUERY_LIMIT'
+      Rails.logger.error "Google Geocoding API quota exceeded for '#{place_name}'"
+      nil
+    when 'REQUEST_DENIED'
+      Rails.logger.error "Google Geocoding API request denied (check API key) for '#{place_name}'"
+      nil
+    when 'INVALID_REQUEST'
+      Rails.logger.error "Invalid geocoding request for '#{place_name}'"
+      nil
+    when 'UNKNOWN_ERROR'
+      Rails.logger.error "Google Geocoding API server error for '#{place_name}' - retrying may succeed"
+      nil
     else
-      Rails.logger.warn "Google geocoding returned status: #{data[:status]} for '#{place_name}'"
-      Rails.logger.warn "Full response: #{data.inspect}"
+      Rails.logger.warn "Unexpected Google geocoding status: #{data[:status]} for '#{place_name}'"
       nil
     end
   rescue => e
@@ -122,7 +143,7 @@ class PlaceGeocoder
         place[:longitude]
       )
 
-      Rails.logger.info "#{place[:name]}: #{distance.round(2)}km from destination"
+      Rails.logger.debug "#{place[:name]}: #{distance.round(2)}km from destination"
       distance <= MAX_DISTANCE_KM
     end
   end
