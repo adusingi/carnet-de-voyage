@@ -8,14 +8,8 @@ export default class extends Controller {
   }
 
   connect() {
-    console.log("Map controller connected!")
-    console.log("Places data:", this.placesValue)
-    console.log("Map element:", this.element)
-    console.log("Map element dimensions:", this.element.offsetWidth, this.element.offsetHeight)
-
-    // Get Mapbox token from meta tag (we'll add this to layout)
+    // Get Mapbox token from meta tag
     const token = document.querySelector('meta[name="mapbox-token"]')?.content
-    console.log("Mapbox token found:", !!token)
 
     if (!token) {
       console.error("Mapbox token not found")
@@ -36,7 +30,6 @@ export default class extends Controller {
 
     // Ensure the map container has proper dimensions
     if (this.element.offsetWidth === 0 || this.element.offsetHeight === 0) {
-      console.warn("Map container has zero dimensions, waiting for layout...")
       setTimeout(() => this.initializeMap(), 100)
       return
     }
@@ -55,9 +48,6 @@ export default class extends Controller {
     })
 
     // Initialize map
-    console.log("Creating map with bounds:", bounds)
-    console.log("Container dimensions:", this.element.offsetWidth, this.element.offsetHeight)
-    
     try {
       this.map = new mapboxgl.Map({
         container: this.element,
@@ -68,12 +58,8 @@ export default class extends Controller {
         }
       })
 
-      console.log("Map created successfully!")
-
       // Wait for map to load before adding controls and markers
       this.map.on('load', () => {
-        console.log("Map loaded event fired")
-        // Force resize in case container wasn't properly sized
         this.map.resize()
         this.addMarkers(places)
       })

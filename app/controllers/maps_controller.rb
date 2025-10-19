@@ -83,8 +83,47 @@ class MapsController < ApplicationController
   end
 
   def update
-    if @map.update(map_params)
-      redirect_to @map, notice: "Map was successfully updated."
+    # Store original text to check if it changed
+    original_text = @map.original_text
+
+    # Update the map with new params
+    @map.assign_attributes(map_params)
+
+    # If original_text changed, re-extract and geocode places
+    if @map.original_text_changed? && @map.original_text.present?
+      # Delete existing places
+      @map.places.destroy_all
+
+      # Extract places from new text
+      extraction_result = PlaceExtractor.new(@map.original_text).extract
+
+      if extraction_result[:success]
+        @map.destination = extraction_result[:destination]
+        @map.processed_text = extraction_result[:places].to_json
+
+        # Geocode places
+        geocoded_places = PlaceGeocoder.new(
+          extraction_result[:places],
+          extraction_result[:destination]
+        ).geocode
+
+        # Create new place records
+        geocoded_places.each_with_index do |place_data, index|
+          @map.places.build(
+            name: place_data[:name],
+            latitude: place_data[:latitude],
+            longitude: place_data[:longitude],
+            address: place_data[:address],
+            place_type: place_data[:type],
+            context: place_data[:context],
+            position: index
+          )
+        end
+      end
+    end
+
+    if @map.save
+      redirect_to @map
     else
       render :edit, status: :unprocessable_entity
     end
