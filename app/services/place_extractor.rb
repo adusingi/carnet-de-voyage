@@ -1,9 +1,45 @@
+# Service for extracting travel places and destinations from natural language text using OpenAI's GPT-4.
+#
+# This service analyzes travel notes, itineraries, or descriptions to identify:
+# - The primary destination (city, region, or country)
+# - Specific places mentioned (restaurants, landmarks, hotels, etc.)
+# - Place types and contextual descriptions
+#
+# @example
+#   extractor = PlaceExtractor.new("Visit Tokyo Tower and eat at Sukiyabashi Jiro")
+#   result = extractor.extract
+#   # => { success: true, destination: "Tokyo, Japan", places: [...] }
 class PlaceExtractor
+  # Initialize the place extractor with text to analyze
+  #
+  # @param text [String] The travel notes or description to extract places from
   def initialize(text)
     @text = text
     @client = OpenAI::Client.new(access_token: ENV['OPENAI_API_KEY'])
   end
 
+  # Extract destination and places from the provided text using OpenAI API
+  #
+  # @return [Hash] Result hash with the following structure:
+  #   - success [Boolean] Whether extraction was successful
+  #   - destination [String] The primary destination (if success: true)
+  #   - places [Array<Hash>] Array of place objects with :name, :context, :type (if success: true)
+  #   - error [String] Error message (if success: false)
+  #
+  # @example Successful extraction
+  #   extract
+  #   # => {
+  #   #   success: true,
+  #   #   destination: "Paris, France",
+  #   #   places: [
+  #   #     { name: "Eiffel Tower", context: "iconic landmark", type: "landmark" },
+  #   #     { name: "Le Jules Verne", context: "Michelin restaurant", type: "restaurant" }
+  #   #   ]
+  #   # }
+  #
+  # @example Failed extraction
+  #   extract
+  #   # => { success: false, error: "Request timed out. Please try again." }
   def extract
     return { success: false, error: 'No text provided' } if @text.blank?
 
@@ -105,6 +141,9 @@ class PlaceExtractor
 
   private
 
+  # Build the prompt for OpenAI that instructs it how to extract places
+  #
+  # @return [String] The formatted prompt with instructions and user text
   def build_prompt
     <<~PROMPT
       Analyze this travel text and extract location information.

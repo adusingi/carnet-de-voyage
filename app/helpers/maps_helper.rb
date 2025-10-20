@@ -1,10 +1,28 @@
+# Helper methods for displaying and interacting with travel maps
 module MapsHelper
-  # Highlight place names in the trip notes with clickable links
-  # Combines Noteplan's simple approach with multilingual support
+  # Highlight place names in travel notes with clickable links
+  #
+  # Converts plain text place names into interactive links that can trigger
+  # map interactions. Supports multilingual place names including French accents.
+  # Uses multiple matching strategies to handle variations in place names.
+  #
+  # @param text [String] The original travel notes text
+  # @param places [Array<Place>] Array of Place objects to highlight
+  # @return [ActiveSupport::SafeBuffer] HTML-safe string with highlighted places
+  #
+  # @example
+  #   text = "Visit the Eiffel Tower and eat at Le Jules Verne"
+  #   places = [Place.new(name: "Eiffel Tower"), Place.new(name: "Le Jules Verne")]
+  #   highlight_place_names(text, places)
+  #   # => "Visit the <a href='#' class='place-link' ...>Eiffel Tower</a>..."
   def highlight_place_names(text, places)
     return text if text.blank? || places.empty?
 
     highlighted_text = text.dup
+
+    # Precompute index map for O(1) lookup instead of O(n) - prevents O(n²) complexity
+    place_index_map = {}
+    places.each_with_index { |place, idx| place_index_map[place.object_id] = idx }
 
     # Sort places by name length (longest first) to avoid partial replacements
     # e.g., replace "The Raines Law Room at The William" before "The William"
@@ -14,8 +32,8 @@ module MapsHelper
       place_name = place.name.to_s.strip
       next if place_name.blank?
 
-      # Find the actual index in the original places array
-      actual_index = places.index(place)
+      # Find the actual index in the original places array using precomputed map
+      actual_index = place_index_map[place.object_id]
 
       # Decode HTML entities (e.g., "&amp;" -> "&", "&#39;" -> "'")
       decoded_name = CGI.unescapeHTML(place_name)
@@ -66,6 +84,20 @@ module MapsHelper
 
   private
 
+  # Extract core name components from a place name for flexible matching
+  #
+  # Uses multiple strategies to extract meaningful parts of place names:
+  # - Full name, core name (without suffixes like "Garden", "Museum")
+  # - Hyphenated compounds (e.g., "Edo-Tokyo")
+  # - Capitalized proper nouns
+  # - Multi-word combinations
+  #
+  # @param place_name [String] The full place name
+  # @return [Array<String>] Array of name variants to try matching
+  #
+  # @example
+  #   extract_core_names("Hamarikyu Garden")
+  #   # => ["Hamarikyu Garden", "Hamarikyu", ...]
   def extract_core_names(place_name)
     # Decode HTML entities
     decoded = CGI.unescapeHTML(place_name)

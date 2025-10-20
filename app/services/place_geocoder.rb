@@ -1,13 +1,39 @@
+# Service for converting place names to geographic coordinates using Google Maps Geocoding API.
+#
+# This service takes an array of place names and returns their latitude/longitude coordinates,
+# with optional filtering by distance from a central destination.
+#
+# @example
+#   places = [{ name: "Eiffel Tower" }, { name: "Louvre Museum" }]
+#   geocoder = PlaceGeocoder.new(places, "Paris, France")
+#   result = geocoder.geocode
+#   # => [{ name: "Eiffel Tower", latitude: 48.858, longitude: 2.294, ... }, ...]
 class PlaceGeocoder
+  # Earth's radius in kilometers for distance calculations
   EARTH_RADIUS_KM = 6371
+
+  # Maximum distance in km from destination to include a place (filters out incorrect matches)
   MAX_DISTANCE_KM = 100
 
+  # Initialize the geocoder with places to convert to coordinates
+  #
+  # @param places [Array<Hash>] Array of place hashes with :name key
+  # @param destination [String, nil] Optional destination name for proximity bias and filtering
   def initialize(places, destination = nil)
     @places = places
     @destination = destination
     @google_api_key = ENV['GOOGLE_MAPS_API_KEY']
   end
 
+  # Geocode all places to latitude/longitude coordinates
+  #
+  # @return [Array<Hash>] Array of geocoded place hashes with keys:
+  #   - name [String] Place name
+  #   - latitude [Float] Latitude coordinate
+  #   - longitude [Float] Longitude coordinate
+  #   - address [String] Formatted address from Google
+  #   - type [String] Place type (restaurant, landmark, etc.)
+  #   - context [String] Additional context about the place
   def geocode
     return [] if @places.blank?
 
@@ -36,6 +62,11 @@ class PlaceGeocoder
 
   private
 
+  # Geocode a single place to coordinates
+  #
+  # @param place [Hash] Place hash with :name key
+  # @param proximity_coords [Hash, nil] Optional coordinates for proximity bias
+  # @return [Hash, nil] Geocoded place hash or nil if geocoding failed
   def geocode_place(place, proximity_coords = nil)
     place_name = place[:name] || place['name']
     return nil if place_name.blank?
@@ -53,6 +84,11 @@ class PlaceGeocoder
     }
   end
 
+  # Call Google Maps Geocoding API to convert place name to coordinates
+  #
+  # @param place_name [String] Name of the place to geocode
+  # @param proximity_coords [Hash, nil] Optional coordinates for location bias
+  # @return [Hash, nil] Hash with :latitude, :longitude, :address keys or nil
   def geocode_with_google(place_name, proximity_coords = nil)
     Rails.logger.debug "Geocoding place: #{place_name}"
 
@@ -121,6 +157,10 @@ class PlaceGeocoder
     nil
   end
 
+  # Get coordinates for a destination city/region
+  #
+  # @param destination [String] Destination name
+  # @return [Hash, nil] Hash with :latitude and :longitude keys or nil
   def get_destination_coords(destination)
     result = geocode_with_google(destination)
     return nil unless result
@@ -134,6 +174,11 @@ class PlaceGeocoder
     nil
   end
 
+  # Filter places by maximum distance from destination
+  #
+  # @param places [Array<Hash>] Places with :latitude and :longitude
+  # @param proximity_coords [Hash] Destination coordinates with :latitude and :longitude
+  # @return [Array<Hash>] Filtered places within MAX_DISTANCE_KM
   def filter_by_distance(places, proximity_coords)
     places.select do |place|
       distance = calculate_distance(
@@ -148,6 +193,13 @@ class PlaceGeocoder
     end
   end
 
+  # Calculate distance between two coordinates using Haversine formula
+  #
+  # @param lat1 [Float] Latitude of first point
+  # @param lon1 [Float] Longitude of first point
+  # @param lat2 [Float] Latitude of second point
+  # @param lon2 [Float] Longitude of second point
+  # @return [Float] Distance in kilometers
   def calculate_distance(lat1, lon1, lat2, lon2)
     d_lat = (lat2 - lat1) * Math::PI / 180
     d_lon = (lon2 - lon1) * Math::PI / 180
