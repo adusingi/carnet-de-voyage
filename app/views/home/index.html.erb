@@ -1,24 +1,24 @@
-<div class="min-h-screen bg-background">
+<div class="min-h-screen bg-white">
   <!-- Navigation -->
-  <nav class="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border">
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
         <div class="flex items-center gap-2">
           <%= image_tag "logo.svg", alt: "Carnet de Voyage", class: "h-8 w-8" %>
-          <span class="text-xl font-semibold text-foreground">Carnet de Voyage</span>
+          <span class="text-xl font-semibold text-gray-900">Carnet de Voyage</span>
         </div>
         <div class="hidden md:flex items-center gap-8">
-          <a href="#features" class="text-muted-foreground hover:text-foreground transition-colors">Features</a>
-          <a href="#pricing" class="text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
-          <a href="#testimonials" class="text-muted-foreground hover:text-foreground transition-colors">Testimonials</a>
+          <a href="#features" class="text-gray-600 hover:text-gray-900 transition-colors">Features</a>
+          <a href="#pricing" class="text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
+          <a href="#testimonials" class="text-gray-600 hover:text-gray-900 transition-colors">Testimonials</a>
         </div>
         <div class="flex items-center gap-4">
           <% if user_signed_in? %>
-            <%= link_to "My Maps", maps_path, class: "text-foreground hover:text-primary transition-colors" %>
+            <%= link_to "My Maps", maps_path, class: "text-gray-900 hover:text-sky-500 transition-colors" %>
           <% else %>
-            <%= link_to "Sign In", new_user_session_path, class: "text-foreground hover:text-primary transition-colors" %>
+            <%= link_to "Sign In", new_user_session_path, class: "text-gray-900 hover:text-sky-500 transition-colors" %>
           <% end %>
-          <%= link_to "Get Started", new_map_path, class: "bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors" %>
+          <%= link_to "Get Started", new_map_path, class: "bg-sky-500 text-white px-4 py-2 rounded-lg hover:bg-sky-600 transition-colors" %>
         </div>
       </div>
     </div>
@@ -28,21 +28,22 @@
   <section class="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
       <div class="text-center max-w-3xl mx-auto">
-        <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold text-foreground mb-6 text-balance">
+        <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-6">
           The <span class="relative inline-block">
             <span class="relative z-10">simplest</span>
             <svg class="absolute left-0 bottom-1 w-full" height="12" viewBox="0 0 200 12" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M 2 8 Q 50 5, 100 7 T 198 9" stroke="#EC4899" stroke-width="3" stroke-linecap="round" fill="none"/>
             </svg>
-          </span> way to turn<br />travel notes into maps
+          </span> way to turn<br class="hidden sm:block" />
+          travel notes into maps
         </h1>
-        <p class="text-xl text-muted-foreground mb-8 text-pretty leading-relaxed">
+        <p class="text-xl text-gray-600 mb-8 leading-relaxed">
           Write naturally, visualize instantly. No complicated planning tools.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <%= link_to "Start writing your trip →", new_map_path, class: "bg-primary text-primary-foreground px-8 py-4 rounded-lg text-lg font-medium hover:bg-primary/90 transition-colors shadow-lg hover:shadow-xl" %>
+          <%= link_to "Start writing your trip →", new_map_path, class: "bg-sky-500 text-white px-8 py-4 rounded-lg text-lg font-medium hover:bg-sky-600 transition-colors shadow-lg hover:shadow-xl" %>
         </div>
-        <p class="text-sm text-muted-foreground mt-6">
+        <p class="text-sm text-gray-500 mt-6">
           No credit card required • Free forever plan available
         </p>
       </div>
