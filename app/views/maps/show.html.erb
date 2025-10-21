@@ -1,3 +1,7 @@
+<% content_for :head do %>
+  <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet' />
+<% end %>
+
 <div class="main-container" style="display: flex; height: 100vh; overflow: hidden;">
   <!-- LEFT SIDE: 40% width -->
   <div class="notes-panel" style="width: 40%; display: flex; flex-direction: column; background-color: white; padding: 24px;">
@@ -5,11 +9,14 @@
     <!-- HEADER (fixed) -->
     <header class="mb-6 flex-shrink-0" style="display: flex; justify-content: space-between; align-items: flex-start;">
       <div>
-        <h1 class="text-4xl font-bold text-gray-800 mb-2">Carnet de Voyage</h1>
-        <p class="text-sm text-gray-500">Transform your travel notes into interactive maps</p>
+        <%= link_to maps_path, class: "flex items-center gap-2 mb-2", style: "text-decoration: none;" do %>
+          <%= image_tag "logo.svg", alt: "Carnet de Voyage", class: "h-8 w-8" %>
+          <h1 class="text-2xl font-semibold text-gray-900" style="margin: 0;">Carnet de Voyage</h1>
+        <% end %>
+        <p class="text-sm text-gray-500">Write naturally and visualize your notes into interactive maps</p>
       </div>
       <div class="header-actions" style="display: flex; gap: 8px;">
-        <%= link_to "← Back to Maps", maps_path, class: "text-sm text-blue-600 hover:text-blue-800" %>
+        <%= link_to "← Back to Notes", maps_path, class: "text-sm text-sky-500 hover:text-sky-600 font-medium" %>
         <% if user_signed_in? && @map.creator == current_user %>
           <%= link_to "Edit", edit_map_path(@map), class: "text-sm px-4 py-2 bg-gray-200 text-gray-800 hover:bg-gray-300 transition" %>
           <%= button_to "Delete", @map, method: :delete, data: { turbo_confirm: "Are you sure?" }, class: "text-sm px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition" %>
