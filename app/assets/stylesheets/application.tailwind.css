@@ -1,54 +1,61 @@
 @import "tailwindcss";
 
-/* CSS Custom Properties for layout dimensions */
-:root {
-  --header-height: 200px;  /* Height reserved for navigation/header */
-  --toolbar-height: 120px; /* Height reserved for toolbar/controls */
+@theme inline {
+  --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    "Noto Color Emoji";
+
+  /* Color Tokens */
+  --color-background: #ffffff;
+  --color-foreground: #0a0a0a;
+  --color-card: #ffffff;
+  --color-card-foreground: #0a0a0a;
+  --color-primary: #0ea5e9;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f59e0b;
+  --color-secondary-foreground: #ffffff;
+  --color-muted: #f5f5f5;
+  --color-muted-foreground: #737373;
+  --color-accent: #f5f5f5;
+  --color-accent-foreground: #0a0a0a;
+  --color-border: #e5e5e5;
+  --color-input: #e5e5e5;
+  --color-ring: #0ea5e9;
+
+  --radius: 0.5rem;
 }
 
-/* Custom styles for map container */
-#map {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  min-height: 100vh;
-}
-
-/* Full height content area (renamed to avoid Tailwind conflict) */
-.full-height-content {
-  min-height: 100vh;
-}
-
-/* Flex layout for side-by-side display */
-.flex-sidebar {
-  display: flex;
-  height: calc(100vh - var(--header-height));
-}
-
-/* Layout styles for side-by-side display using @layer for proper specificity */
-@layer components {
-  .main-content {
-    display: flex;
-    height: calc(100vh - var(--toolbar-height));
-  }
-
-  .left-sidebar {
-    width: 40%;
-    flex-shrink: 0;
-    background-color: #f9fafb;
-  }
-
-  .right-map {
-    width: 60%;
-    height: 100%;
-    flex-shrink: 0;
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  @theme inline {
+    --color-background: #0a0a0a;
+    --color-foreground: #fafafa;
+    --color-card: #171717;
+    --color-card-foreground: #fafafa;
+    --color-muted: #262626;
+    --color-muted-foreground: #a3a3a3;
+    --color-accent: #262626;
+    --color-accent-foreground: #fafafa;
+    --color-border: #262626;
+    --color-input: #262626;
   }
 }
 
-.custom-marker {
-  transition: transform 0.2s ease;
+/* Custom animations */
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0) translateX(-50%);
+  }
+  50% {
+    transform: translateY(-10px) translateX(-50%);
+  }
 }
 
-.custom-marker:hover {
-  transform: scale(1.1);
+.animate-bounce {
+  animation: bounce 1s ease-in-out;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
 }
