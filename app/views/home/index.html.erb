@@ -14,7 +14,7 @@
             <%= button_to "Sign Out", destroy_user_session_path, method: :delete, class: "text-gray-600 hover:text-gray-900 transition-colors font-medium", form: { style: "display: inline;" } %>
           <% else %>
             <%= link_to "Pricing", "#pricing", class: "text-gray-600 hover:text-gray-900 transition-colors font-medium" %>
-            <%= link_to "Sign In", new_user_session_path, class: "text-gray-600 hover:text-gray-900 transition-colors font-medium" %>
+            <%= link_to "Log In", new_user_session_path, class: "text-gray-600 hover:text-gray-900 transition-colors font-medium" %>
             <%= link_to "Get Started", new_map_path, class: "bg-sky-500 text-white px-4 py-2 rounded-lg hover:bg-sky-600 transition-colors font-medium" %>
           <% end %>
         </div>
