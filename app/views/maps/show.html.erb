@@ -1,0 +1,131 @@
+<% content_for :head do %>
+  <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet' />
+<% end %>
+
+<div class="main-container" style="display: flex; height: 100vh; overflow: hidden;">
+  <!-- LEFT SIDE: 40% width -->
+  <div class="notes-panel" style="width: 40%; display: flex; flex-direction: column; background-color: white; padding: 24px;">
+
+    <!-- HEADER (fixed) -->
+    <header class="mb-6 flex-shrink-0" style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div>
+        <%= link_to maps_path, class: "flex items-center gap-2 mb-2", style: "text-decoration: none;" do %>
+          <%= image_tag "logo.svg", alt: "Carnet de Voyage", class: "h-8 w-8" %>
+          <h1 class="text-2xl font-semibold text-gray-900" style="margin: 0;">Carnet de Voyage</h1>
+        <% end %>
+        <p class="text-sm text-gray-500">Write naturally and visualize your notes into interactive maps</p>
+      </div>
+      <div class="header-actions" style="display: flex; gap: 8px;">
+        <%= link_to "← Back to Notes", maps_path, class: "text-sm text-sky-500 hover:text-sky-600 font-medium" %>
+        <% if user_signed_in? && @map.creator == current_user %>
+          <%= link_to "Edit", edit_map_path(@map), class: "text-sm px-4 py-2 bg-gray-200 text-gray-800 hover:bg-gray-300 transition" %>
+          <%= button_to "Delete", @map, method: :delete, data: { turbo_confirm: "Are you sure?" }, class: "text-sm px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition" %>
+        <% end %>
+      </div>
+    </header>
+
+    <!-- Destination -->
+    <% if @map.title.present? %>
+      <div class="flex-shrink-0" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 0.125rem; padding: 12px; margin-bottom: 16px;"><p style="font-size: 0.875rem; color: #1e40af; margin: 0;"><span style="font-weight: 600;">📍 Destination:</span> <%= @map.title %></p></div>
+    <% end %>
+
+    <!-- Trip Notes Display -->
+    <div style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
+      <!-- Map Title -->
+      <% if @map.title.present? %>
+        <h2 class="flex-shrink-0" style="padding: 16px; margin-bottom: 12px; margin-top: 0; border: 1px solid #d1d5db; border-radius: 0.125rem; font-size: 18px; font-weight: 600; color: #374151; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+          <%= @map.title %>
+        </h2>
+      <% end %>
+
+      <% if @map.original_text.present? %>
+        <div data-notes-display class="text-gray-800 leading-relaxed" style="flex: 1; border: 1px solid #d1d5db; border-radius: 0.125rem; padding: 16px; overflow-y: auto; background-color: #ffffff; font-size: 15px; line-height: 1.6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+          <%= highlight_place_names(simple_format(@map.original_text), @map.places) %>
+        </div>
+      <% else %>
+        <div class="text-gray-500" style="flex: 1; border: 1px solid #d1d5db; border-radius: 0.125rem; padding: 16px; overflow-y: auto; background-color: #f9fafb;">
+          <p>No trip notes available. Click "Edit" to add your travel notes.</p>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Footer Space (5vh) -->
+    <div style="height: 5vh; flex-shrink: 0;"></div>
+  </div>
+
+  <!-- RIGHT SIDE: 60% width -->
+  <div class="map-panel" style="width: 60%; position: relative; overflow: hidden;">
+    <div id="map" style="width: 100%; height: 100vh;" data-controller="map" data-map-places-value="<%= @map.places.to_json(only: [:id, :name, :latitude, :longitude, :address, :place_type, :context]) %>"></div>
+  </div>
+</div>
+
+<style>
+  /* Mobile Responsive Styles */
+  @media (max-width: 1023px) {
+    /* Stack vertically on mobile */
+    .main-container {
+      flex-direction: column !important;
+      height: auto !important;
+    }
+
+    /* Left panel - full width on mobile */
+    .notes-panel {
+      width: 100% !important;
+      max-height: none !important;
+      overflow-y: visible !important;
+      padding: 16px !important;
+    }
+
+    /* Right panel - full width on mobile, fixed height */
+    .map-panel {
+      width: 100% !important;
+      height: 400px !important;
+      position: relative !important;
+    }
+
+    .map-panel #map {
+      height: 400px !important;
+    }
+
+    /* Smaller text on mobile */
+    .notes-panel h1 {
+      font-size: 1.5rem !important;
+    }
+
+    /* Stack header buttons */
+    .header-actions {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 8px !important;
+    }
+  }
+
+  @media (max-width: 640px) {
+    /* Even smaller on very small screens */
+    .notes-panel {
+      padding: 12px !important;
+    }
+
+    .notes-panel h1 {
+      font-size: 1.25rem !important;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Check if coming from an update (Turbo stores referrer)
+    const notesDisplay = document.querySelector('[data-notes-display]');
+
+    if (notesDisplay && document.referrer.includes('/edit')) {
+      // Add green border
+      notesDisplay.style.border = '2px solid #10b981'; // green-500
+      notesDisplay.style.transition = 'border 0.3s ease-in-out';
+
+      // Remove after 3 seconds
+      setTimeout(function() {
+        notesDisplay.style.border = '1px solid #d1d5db';
+      }, 3000);
+    }
+  });
+</script>
