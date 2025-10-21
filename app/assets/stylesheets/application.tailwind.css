@@ -1,9 +1,7 @@
 @import "tailwindcss";
 
-@theme inline {
-  --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
-    "Noto Color Emoji";
-
+/* Custom theme variables for Tailwind v4 */
+@theme {
   /* Color Tokens */
   --color-background: #ffffff;
   --color-foreground: #0a0a0a;
@@ -26,7 +24,7 @@
 
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
-  @theme inline {
+  @theme {
     --color-background: #0a0a0a;
     --color-foreground: #fafafa;
     --color-card: #171717;
@@ -58,4 +56,10 @@
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
+}
+
+/* Ensure white background for the app */
+body {
+  background-color: white;
+  color: #0a0a0a;
 }
