@@ -58,7 +58,7 @@ gem "prawn-table"
 
 # Payments (for B2B tier)
 gem "pay"
-gem "stripe", "~> 15.0"  # Pay gem requires stripe ~> 15
+gem "stripe", "~> 17.1"  # Pay gem requires stripe ~> 15
 
 # Admin Dashboard
 gem "avo"
