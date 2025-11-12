@@ -73,7 +73,10 @@ And Carnet de Voyage will:
    OPENAI_API_KEY=your_openai_api_key
    GOOGLE_MAPS_API_KEY=your_google_maps_api_key
    MAPBOX_TOKEN=your_mapbox_token
+   TILE_PROVIDER=openstreetmap  # Use 'openstreetmap' (free) or 'mapbox' (premium)
    ```
+
+   **Note**: For development, use `TILE_PROVIDER=openstreetmap` to avoid Mapbox API costs. For production, use `TILE_PROVIDER=mapbox` for premium map styling.
 
 4. **Set up the database**
    ```bash

@@ -8,16 +8,29 @@ export default class extends Controller {
   }
 
   connect() {
-    // Get Mapbox token from meta tag
-    const token = document.querySelector('meta[name="mapbox-token"]')?.content
+    // Get tile provider from meta tag
+    const tileProvider = document.querySelector('meta[name="tile-provider"]')?.content || 'openstreetmap'
 
-    if (!token) {
-      console.error("Mapbox token not found")
-      this.element.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">Map configuration error: Mapbox token not set</div>'
-      return
+    // Mapbox GL JS requires a token even for non-Mapbox tiles
+    // Use a placeholder token for OpenStreetMap to satisfy the library
+    if (tileProvider === 'mapbox') {
+      const token = document.querySelector('meta[name="mapbox-token"]')?.content
+
+      if (!token) {
+        console.error("Mapbox token not found")
+        this.element.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">Map configuration error: Mapbox token not set</div>'
+        return
+      }
+
+      mapboxgl.accessToken = token
+    } else {
+      // Set a placeholder token for OSM (Mapbox GL JS requires this)
+      // This won't make any API calls to Mapbox when using custom tile sources
+      mapboxgl.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw'
     }
 
-    mapboxgl.accessToken = token
+    // Store tile provider for later use
+    this.tileProvider = tileProvider
 
     // Calculate center and bounds from places
     const places = this.placesValue
@@ -49,14 +62,16 @@ export default class extends Controller {
 
     // Initialize map
     try {
-      this.map = new mapboxgl.Map({
+      const mapConfig = {
         container: this.element,
-        style: 'mapbox://styles/mapbox/streets-v12',
+        style: this.getMapStyle(),
         bounds: bounds,
         fitBoundsOptions: {
           padding: 50
         }
-      })
+      }
+
+      this.map = new mapboxgl.Map(mapConfig)
 
       // Wait for map to load before adding controls and markers
       this.map.on('load', () => {
@@ -76,11 +91,44 @@ export default class extends Controller {
     }
   }
 
+  getMapStyle() {
+    // Return appropriate map style based on tile provider
+    if (this.tileProvider === 'mapbox') {
+      return 'mapbox://styles/mapbox/streets-v12'
+    } else {
+      // OpenStreetMap tile configuration
+      return {
+        version: 8,
+        sources: {
+          'osm-tiles': {
+            type: 'raster',
+            tiles: [
+              'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'
+            ],
+            tileSize: 256,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          }
+        },
+        layers: [
+          {
+            id: 'osm-tiles-layer',
+            type: 'raster',
+            source: 'osm-tiles',
+            minzoom: 0,
+            maxzoom: 19
+          }
+        ]
+      }
+    }
+  }
+
   showDefaultMap() {
     try {
       this.map = new mapboxgl.Map({
         container: this.element,
-        style: 'mapbox://styles/mapbox/streets-v12',
+        style: this.getMapStyle(),
         center: [0, 20], // Default center
         zoom: 2
       })

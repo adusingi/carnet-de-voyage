@@ -137,48 +137,117 @@
 
   // Store map instance to prevent multiple initializations
   let previewMapInstance = null;
+  let isInitializing = false;
 
-  // Initialize Mapbox map
+  // Get map style based on tile provider
+  function getMapStyle() {
+    const tileProvider = document.querySelector('meta[name="tile-provider"]')?.content || 'openstreetmap';
+
+    if (tileProvider === 'mapbox') {
+      return 'mapbox://styles/mapbox/streets-v12';
+    } else {
+      // OpenStreetMap tile configuration
+      return {
+        version: 8,
+        sources: {
+          'osm-tiles': {
+            type: 'raster',
+            tiles: [
+              'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'
+            ],
+            tileSize: 256,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          }
+        },
+        layers: [
+          {
+            id: 'osm-tiles-layer',
+            type: 'raster',
+            source: 'osm-tiles',
+            minzoom: 0,
+            maxzoom: 19
+          }
+        ]
+      };
+    }
+  }
+
+  // Initialize map
   function initializeMap() {
+    // Prevent multiple simultaneous initializations
+    if (isInitializing || previewMapInstance) {
+      console.log('Map already initializing or initialized, skipping...');
+      return;
+    }
+
+    isInitializing = true;
+
+    const tileProviderMeta = document.querySelector('meta[name="tile-provider"]');
     const mapboxTokenMeta = document.querySelector('meta[name="mapbox-token"]');
     const mapContainer = document.getElementById('preview-map');
 
     // Check if we're on the right page and container exists
     if (!mapContainer) {
       console.log('Map container not found');
+      isInitializing = false;
       return;
     }
 
     // Wait for mapboxgl to be available
     if (typeof mapboxgl === 'undefined') {
       console.log('Mapbox GL not loaded yet, retrying...');
+      isInitializing = false;
       setTimeout(initializeMap, 100);
       return;
     }
 
-    if (mapboxTokenMeta && mapboxTokenMeta.content) {
-      // Clean up existing map instance if it exists
-      if (previewMapInstance) {
-        console.log('Removing existing map instance');
-        previewMapInstance.remove();
-        previewMapInstance = null;
+    const tileProvider = tileProviderMeta?.content || 'openstreetmap';
+
+    // Mapbox GL JS requires a token even for non-Mapbox tiles
+    // Use a placeholder token for OpenStreetMap to satisfy the library
+    if (tileProvider === 'mapbox') {
+      if (!mapboxTokenMeta || !mapboxTokenMeta.content) {
+        console.warn('Mapbox token not found in meta tags');
+        isInitializing = false;
+        return;
       }
+      mapboxgl.accessToken = mapboxTokenMeta.content;
+    } else {
+      // Set a placeholder token for OSM (Mapbox GL JS requires this)
+      // This won't make any API calls to Mapbox when using custom tile sources
+      mapboxgl.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+    }
 
-      const mapboxToken = mapboxTokenMeta.content;
-      mapboxgl.accessToken = mapboxToken;
+    console.log('Creating new map instance with', tileProvider, 'tiles');
 
-      console.log('Creating new map instance');
+    try {
       previewMapInstance = new mapboxgl.Map({
         container: 'preview-map',
-        style: 'mapbox://styles/mapbox/streets-v12',
+        style: getMapStyle(),
         center: [139.6917, 35.6895], // Tokyo coordinates
         zoom: 11
       });
 
+      // Wait for map to load before adding controls
+      previewMapInstance.on('load', function() {
+        console.log('Map loaded successfully');
+        isInitializing = false;
+      });
+
+      // Handle errors
+      previewMapInstance.on('error', function(e) {
+        console.error('Map error:', e);
+        isInitializing = false;
+      });
+
       // Add navigation controls
       previewMapInstance.addControl(new mapboxgl.NavigationControl());
-    } else {
-      console.warn('Mapbox token not found in meta tags');
+    } catch (error) {
+      console.error('Error creating map:', error);
+      isInitializing = false;
+      previewMapInstance = null;
     }
   }
 
