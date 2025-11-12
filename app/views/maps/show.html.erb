@@ -10,23 +10,73 @@
     <header class="mb-6 flex-shrink-0" style="display: flex; justify-content: space-between; align-items: flex-start;">
       <div>
         <%= link_to maps_path, class: "flex items-center gap-2 mb-2", style: "text-decoration: none;" do %>
-          <%= image_tag "logo.svg", alt: "Carnet de Voyage", class: "h-8 w-8" %>
-          <h1 class="text-2xl font-semibold text-gray-900" style="margin: 0;">Carnet de Voyage</h1>
+          <div class="flex items-center gap-2">
+            <%= image_tag "logo.svg", alt: "Carnet de Voyage", class: "h-8 w-8" %>
+            <div class="flex flex-col">
+              <h1 class="text-2xl font-semibold text-gray-900" style="margin: 0;">Carnet de Voyage</h1>
+              <span class="text-sm text-gray-500">Write naturally, visualize instantly.</span>
+            </div>
+          </div>
         <% end %>
-        <p class="text-sm text-gray-500">Write naturally and visualize your notes into interactive maps</p>
+        <!-- <p class="text-sm text-gray-500">Write naturally and visualize your notes into interactive maps</p> -->
       </div>
-      <div class="header-actions" style="display: flex; gap: 8px;">
+      <div class="header-actions" style="display: flex; gap: 8px; align-items: center;">
         <%= link_to "← Back to Notes", maps_path, class: "text-sm text-sky-500 hover:text-sky-600 font-medium" %>
         <% if user_signed_in? && @map.creator == current_user %>
-          <%= link_to "Edit", edit_map_path(@map), class: "text-sm px-4 py-2 bg-gray-200 text-gray-800 hover:bg-gray-300 transition" %>
-          <%= button_to "Delete", @map, method: :delete, data: { turbo_confirm: "Are you sure?" }, class: "text-sm px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition" %>
+          <!-- 3-dot menu -->
+          <div id="dropdown-menu" style="position: relative;">
+            <button type="button" id="dropdown-button" class="p-2 hover:bg-gray-100 rounded-lg transition-colors" aria-label="More options">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" class="text-gray-600">
+                <circle cx="10" cy="4" r="1.5"/>
+                <circle cx="10" cy="10" r="1.5"/>
+                <circle cx="10" cy="16" r="1.5"/>
+              </svg>
+            </button>
+
+            <!-- Dropdown menu -->
+            <div id="dropdown-content" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); min-width: 180px; z-index: 50;">
+              <div style="padding: 8px;">
+                <%= link_to edit_map_path(@map), class: "flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-sm", style: "text-decoration: none;" do %>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                  <span>Edit</span>
+                <% end %>
+
+                <%= link_to edit_map_path(@map), class: "flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-sm", style: "text-decoration: none;" do %>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 6L9 17l-5-5"/>
+                    <path d="M7 7l10-4-4 10"/>
+                  </svg>
+                  <span>Rename</span>
+                <% end %>
+
+                <button type="button" id="duplicate-button" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-sm w-full text-left" style="border: none; background: none; cursor: pointer; font-family: inherit;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                  <span>Duplicate</span>
+                </button>
+
+                <%= button_to @map, method: :delete, data: { turbo_confirm: "Are you sure you want to delete this map?" }, class: "flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-sm w-full text-left", style: "border: none; background: none; cursor: pointer; font-family: inherit;" do %>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                  <span>Delete</span>
+                <% end %>
+              </div>
+            </div>
+          </div>
         <% end %>
       </div>
     </header>
 
     <!-- Destination -->
-    <% if @map.title.present? %>
-      <div class="flex-shrink-0" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 0.125rem; padding: 12px; margin-bottom: 16px;"><p style="font-size: 0.875rem; color: #1e40af; margin: 0;"><span style="font-weight: 600;">📍 Destination:</span> <%= @map.title %></p></div>
+    <% if @map.destination.present? %>
+      <div class="flex-shrink-0" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 0.125rem; padding: 12px; margin-bottom: 16px;"><p style="font-size: 0.875rem; color: #1e40af; margin: 0;"><span style="font-weight: 600;">📍 Destination:</span> <%= @map.destination %></p></div>
     <% end %>
 
     <!-- Trip Notes Display -->
@@ -113,7 +163,7 @@
 </style>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  function initializeDropdown() {
     // Check if coming from an update (Turbo stores referrer)
     const notesDisplay = document.querySelector('[data-notes-display]');
 
@@ -127,5 +177,71 @@
         notesDisplay.style.border = '1px solid #d1d5db';
       }, 3000);
     }
-  });
+
+    // Dropdown menu functionality
+    const dropdownButton = document.getElementById('dropdown-button');
+    const dropdownContent = document.getElementById('dropdown-content');
+    const dropdownMenu = document.getElementById('dropdown-menu');
+    const duplicateButton = document.getElementById('duplicate-button');
+
+    if (dropdownButton && dropdownContent) {
+      // Remove any existing listeners to prevent duplicates
+      const newDropdownButton = dropdownButton.cloneNode(true);
+      dropdownButton.parentNode.replaceChild(newDropdownButton, dropdownButton);
+
+      // Toggle dropdown
+      newDropdownButton.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const content = document.getElementById('dropdown-content');
+        if (content.style.display === 'none' || content.style.display === '') {
+          content.style.display = 'block';
+        } else {
+          content.style.display = 'none';
+        }
+      });
+
+      // Close dropdown when clicking outside
+      document.addEventListener('click', function(e) {
+        const menu = document.getElementById('dropdown-menu');
+        const content = document.getElementById('dropdown-content');
+        if (menu && content && !menu.contains(e.target)) {
+          content.style.display = 'none';
+        }
+      });
+
+      // Duplicate functionality
+      const dupButton = document.getElementById('duplicate-button');
+      if (dupButton) {
+        dupButton.addEventListener('click', function(e) {
+          e.preventDefault();
+          const content = document.getElementById('dropdown-content');
+          content.style.display = 'none';
+
+          const mapId = window.location.pathname.split('/').pop();
+
+          if (confirm("Do you want to duplicate this map?")) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/maps/' + mapId + '/duplicate';
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'authenticity_token';
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+
+            document.body.appendChild(form);
+            form.submit();
+          }
+        });
+      }
+    }
+  }
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', initializeDropdown);
+
+  // Initialize on Turbo navigation
+  document.addEventListener('turbo:load', initializeDropdown);
 </script>

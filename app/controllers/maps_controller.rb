@@ -7,18 +7,14 @@
 # - Authorization for public/private/shared maps
 # - PDF export functionality
 class MapsController < ApplicationController
-  before_action :authenticate_user!, except: [:index, :show]
+  before_action :authenticate_user!, except: [:show, :new]
   before_action :set_map, only: [:show, :edit, :update, :destroy]
   before_action :authorize_map_view, only: [:show]
   before_action :authorize_map, only: [:edit, :update, :destroy]
 
-  # Display list of maps (public maps for guests, user's maps for signed-in users)
+  # Display list of maps for signed-in users only
   def index
-    @maps = if user_signed_in?
-              current_user.maps.recent
-            else
-              Map.public_maps.recent
-            end
+    @maps = current_user.maps.recent
   end
 
   # Display a single map with its places and interactive visualization
@@ -40,21 +36,37 @@ class MapsController < ApplicationController
 
   # Show form for creating a new map
   #
-  # Checks if user has available map slots based on their role
+  # Allows non-authenticated users to see the form
+  # Authentication check happens on create
   def new
-    unless current_user.can_create_map?
+    # Check if user is signed in and has reached their limit
+    if user_signed_in? && !current_user.can_create_map?
       redirect_to maps_path, alert: "You've reached your map limit. Upgrade to create more maps."
       return
     end
 
     @map = Map.new
+
+    # Restore pending map data if user just signed up
+    if session[:pending_map_data].present?
+      @map.assign_attributes(session[:pending_map_data])
+    end
   end
 
   # Create a new map from travel notes
   #
+  # Requires authentication - redirects to sign up if user is not signed in
   # Uses AI (PlaceExtractor) to extract destination and places from text,
   # then geocodes places to coordinates using PlaceGeocoder
   def create
+    # Redirect to sign up if user is not signed in
+    unless user_signed_in?
+      # Store the form data in session so we can restore it after sign up
+      session[:pending_map_data] = map_params.to_h
+      redirect_to new_user_registration_path, alert: "Please sign up or log in to create your map."
+      return
+    end
+
     unless current_user.can_create_map?
       redirect_to maps_path, alert: "You've reached your map limit. Upgrade to create more maps."
       return
@@ -92,6 +104,8 @@ class MapsController < ApplicationController
     end
 
     if @map.save
+      # Clear the pending map data from session
+      session.delete(:pending_map_data)
       redirect_to @map, notice: "Map was successfully created."
     else
       render :new, status: :unprocessable_entity
@@ -157,6 +171,48 @@ class MapsController < ApplicationController
   def destroy
     @map.destroy
     redirect_to maps_url, notice: "Map was successfully deleted."
+  end
+
+  # Duplicate a map with all its places
+  def duplicate
+    @original_map = Map.find(params[:id])
+
+    # Check authorization
+    unless @original_map.creator == current_user
+      redirect_to maps_path, alert: "You are not authorized to duplicate this map."
+      return
+    end
+
+    # Check if user can create more maps
+    unless current_user.can_create_map?
+      redirect_to maps_path, alert: "You've reached your map limit. Upgrade to create more maps."
+      return
+    end
+
+    # Create a duplicate
+    @new_map = @original_map.dup
+    @new_map.title = "#{@original_map.title} (Copy)"
+    @new_map.creator = current_user
+    @new_map.places_count = 0  # Reset the counter cache before saving
+
+    if @new_map.save
+      # Duplicate all places (counter_cache will auto-increment)
+      @original_map.places.each do |place|
+        @new_map.places.create(
+          name: place.name,
+          latitude: place.latitude,
+          longitude: place.longitude,
+          address: place.address,
+          place_type: place.place_type,
+          context: place.context,
+          position: place.position
+        )
+      end
+
+      redirect_to @new_map, notice: "Map was successfully duplicated."
+    else
+      redirect_to @original_map, alert: "Failed to duplicate map."
+    end
   end
 
   private

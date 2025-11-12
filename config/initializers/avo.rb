@@ -20,10 +20,16 @@ Avo.configure do |config|
   ## == Authentication ==
   config.current_user_method = :current_user
   config.authenticate_with do
-    authenticate_user!
+    # Check if user is signed in
+    if !current_user
+      # Store the location they were trying to access
+      session[:user_return_to] = request.fullpath unless request.fullpath == new_user_session_path
+      redirect_to new_user_session_path
+      next
+    end
 
-    # Restrict Avo access to admins only
-    unless current_user&.admin?
+    # After authentication, restrict Avo access to admins only
+    unless current_user.admin?
       redirect_to root_path, alert: "You are not authorized to access the admin panel."
     end
   end

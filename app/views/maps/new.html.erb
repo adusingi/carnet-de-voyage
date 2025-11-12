@@ -11,10 +11,15 @@
     <header class="mb-6 flex-shrink-0" style="display: flex; justify-content: space-between; align-items: flex-start;">
       <div>
         <%= link_to maps_path, class: "flex items-center gap-2 mb-2", style: "text-decoration: none;" do %>
-          <%= image_tag "logo.svg", alt: "Carnet de Voyage", class: "h-8 w-8" %>
-          <h1 class="text-2xl font-semibold text-gray-900" style="margin: 0;">Carnet de Voyage</h1>
+          <div class="flex items-center gap-2">
+            <%= image_tag "logo.svg", alt: "Carnet de Voyage", class: "h-8 w-8" %>
+            <div class="flex flex-col">
+              <h1 class="text-2xl font-semibold text-gray-900" style="margin: 0;">Carnet de Voyage</h1>
+              <span class="text-sm text-gray-500">Write naturally, visualize instantly.</span>
+            </div>
+          </div>
         <% end %>
-        <p class="text-sm text-gray-500">Write naturally and visualize your notes into interactive maps</p>
+        <!-- <p class="text-sm text-gray-500">Write naturally and visualize your notes into interactive maps</p> -->
       </div>
       <div style="display: flex; gap: 8px;">
         <%= link_to "← Back to Notes", maps_path, class: "text-sm text-sky-500 hover:text-sky-600 font-medium" %>
@@ -82,8 +87,56 @@
 </style>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Mapbox map (independent of button functionality)
+  // Button disabled state functionality
+  function initializeButtonState() {
+    const textarea = document.querySelector('[data-textarea-target="input"]');
+    const submitButton = document.querySelector('[data-submit-button-target="button"]');
+    const loadingSpinner = document.querySelector('[data-loading-spinner]');
+    const form = submitButton ? submitButton.closest('form') : null;
+
+    if (textarea && submitButton) {
+      // Store original button text
+      const originalText = submitButton.value;
+      const loadingText = submitButton.dataset.loadingText || 'Processing...';
+
+      // Function to check if textarea has content
+      function updateButtonState() {
+        const hasContent = textarea.value.trim().length > 0;
+        submitButton.disabled = !hasContent;
+
+        // Update styles based on disabled state
+        if (hasContent) {
+          submitButton.style.backgroundColor = '#2563eb'; // blue-600
+          submitButton.style.cursor = 'pointer';
+          submitButton.style.color = '#ffffff'; // white text
+        } else {
+          submitButton.style.backgroundColor = '#9ca3af'; // gray-400
+          submitButton.style.cursor = 'not-allowed';
+          submitButton.style.color = '#ffffff'; // white text
+        }
+      }
+
+      // Check on input
+      textarea.addEventListener('input', updateButtonState);
+
+      // Check immediately on initialization
+      updateButtonState();
+
+      // Handle form submission - show loading state
+      if (form) {
+        form.addEventListener('submit', function(e) {
+          // Show loading state
+          submitButton.value = loadingText;
+          submitButton.disabled = true;
+          submitButton.style.backgroundColor = '#2563eb'; // Keep blue during loading
+          submitButton.style.cursor = 'wait';
+        });
+      }
+    }
+  }
+
+  // Initialize Mapbox map
+  function initializeMap() {
     const mapboxTokenMeta = document.querySelector('meta[name="mapbox-token"]');
 
     if (mapboxTokenMeta && mapboxTokenMeta.content && typeof mapboxgl !== 'undefined') {
@@ -102,65 +155,16 @@
     } else {
       console.warn('Mapbox not initialized: token or library missing');
     }
+  }
 
-    // Button disabled state functionality (runs regardless of Mapbox status)
-    function initializeButtonState() {
-      const textarea = document.querySelector('[data-textarea-target="input"]');
-      const submitButton = document.querySelector('[data-submit-button-target="button"]');
-      const loadingSpinner = document.querySelector('[data-loading-spinner]');
-      const form = submitButton ? submitButton.closest('form') : null;
-
-      if (textarea && submitButton) {
-        // Store original button text
-        const originalText = submitButton.value;
-        const loadingText = submitButton.dataset.loadingText || 'Processing...';
-
-        // Function to check if textarea has content
-        function updateButtonState() {
-          const hasContent = textarea.value.trim().length > 0;
-          submitButton.disabled = !hasContent;
-
-          // Update styles based on disabled state
-          if (hasContent) {
-            submitButton.style.backgroundColor = '#2563eb'; // blue-600
-            submitButton.style.cursor = 'pointer';
-            submitButton.style.color = '#ffffff'; // white text
-          } else {
-            submitButton.style.backgroundColor = '#9ca3af'; // gray-400
-            submitButton.style.cursor = 'not-allowed';
-            submitButton.style.color = '#ffffff'; // white text
-          }
-        }
-
-        // Check on input
-        textarea.addEventListener('input', updateButtonState);
-
-        // Check immediately on initialization
-        updateButtonState();
-
-        // Handle form submission - show loading state
-        if (form) {
-          form.addEventListener('submit', function(e) {
-            // Show loading state
-            submitButton.value = loadingText;
-            submitButton.disabled = true;
-            submitButton.style.backgroundColor = '#2563eb'; // Keep blue during loading
-            submitButton.style.cursor = 'wait';
-
-            // Optional: show spinner (uncomment if you want spinner instead of just text)
-            // if (loadingSpinner) {
-            //   loadingSpinner.style.display = 'block';
-            //   submitButton.style.color = 'transparent'; // Hide text to show spinner
-            // }
-          });
-        }
-      }
-    }
-
-    // Initialize button state
+  // Run on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    initializeMap();
     initializeButtonState();
+  });
 
-    // Also run on turbo:load for Turbo compatibility
-    document.addEventListener('turbo:load', initializeButtonState);
+  // Also run on turbo:load for Turbo compatibility
+  document.addEventListener('turbo:load', function() {
+    initializeButtonState();
   });
 </script>

@@ -6,10 +6,15 @@
     <header class="mb-6 flex-shrink-0" style="display: flex; justify-content: space-between; align-items: flex-start;">
       <div>
         <%= link_to @map, class: "flex items-center gap-2 mb-2", style: "text-decoration: none;" do %>
-          <%= image_tag "logo.svg", alt: "Carnet de Voyage", class: "h-8 w-8" %>
-          <h1 class="text-2xl font-semibold text-gray-900" style="margin: 0;">Carnet de Voyage</h1>
+          <div class="flex items-center gap-2">
+            <%= image_tag "logo.svg", alt: "Carnet de Voyage", class: "h-8 w-8" %>
+            <div class="flex flex-col">
+              <h1 class="text-2xl font-semibold text-gray-900" style="margin: 0;">Carnet de Voyage</h1>
+              <span class="text-sm text-gray-500">Write naturally, visualize instantly.</span>
+            </div>
+          </div>
         <% end %>
-        <p class="text-sm text-gray-500">Write naturally and visualize your notes into interactive maps</p>
+        <!-- <p class="text-sm text-gray-500">Write naturally and visualize your notes into interactive maps</p> -->
       </div>
       <div style="display: flex; gap: 8px;">
         <%= link_to "← Back to Map", @map, class: "text-sm text-sky-500 hover:text-sky-600 font-medium" %>
@@ -18,8 +23,8 @@
     </header>
 
     <!-- Destination -->
-    <% if @map.title.present? %>
-      <div class="flex-shrink-0" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 0.125rem; padding: 12px; margin-bottom: 16px;"><p style="font-size: 0.875rem; color: #1e40af; margin: 0;"><span style="font-weight: 600;">📍 Destination:</span> <%= @map.title %></p></div>
+    <% if @map.destination.present? %>
+      <div class="flex-shrink-0" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 0.125rem; padding: 12px; margin-bottom: 16px;"><p style="font-size: 0.875rem; color: #1e40af; margin: 0;"><span style="font-weight: 600;">📍 Destination:</span> <%= @map.destination %></p></div>
     <% end %>
 
     <!-- Trip Notes Form -->

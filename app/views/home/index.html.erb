@@ -4,17 +4,22 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
         <%= link_to root_path, class: "flex items-center gap-2" do %>
-          <%= image_tag "logo.svg", alt: "Carnet de Voyage", class: "h-8 w-8" %>
-          <span class="text-xl font-semibold text-gray-900">Carnet de Voyage</span>
+          <div class="flex items-center gap-2">
+            <%= image_tag "logo.svg", alt: "Carnet de Voyage", class: "h-8 w-8" %>
+            <div class="flex flex-col">
+              <span class="text-xl font-semibold text-gray-900">Carnet de Voyage</span>
+              <span class="text-sm text-gray-500">Write naturally, visualize instantly.</span>
+            </div>
+          </div>
         <% end %>
 
         <div class="flex items-center gap-6">
           <% if user_signed_in? %>
-            <%= link_to "My Maps", maps_path, class: "text-gray-600 hover:text-gray-900 transition-colors font-medium" %>
+            <%= link_to "My Notes", maps_path, class: "text-gray-600 hover:text-gray-900 transition-colors font-medium" %>
             <%= button_to "Sign Out", destroy_user_session_path, method: :delete, class: "text-gray-600 hover:text-gray-900 transition-colors font-medium", form: { style: "display: inline;" } %>
           <% else %>
             <%= link_to "Pricing", "#pricing", class: "text-gray-600 hover:text-gray-900 transition-colors font-medium" %>
-            <%= link_to "Log In", new_user_session_path, class: "text-gray-600 hover:text-gray-900 transition-colors font-medium" %>
+            <%= link_to "Log in", new_user_session_path, class: "text-gray-600 hover:text-gray-900 transition-colors font-medium" %>
             <%= link_to "Get Started", new_map_path, class: "bg-sky-500 text-white px-4 py-2 rounded-lg hover:bg-sky-600 transition-colors font-medium" %>
           <% end %>
         </div>
@@ -391,11 +396,11 @@
         <div>
           <div class="flex items-center gap-2 mb-4">
             <%= image_tag "logo.svg", alt: "Carnet de Voyage", class: "h-8 w-8" %>
-            <span class="text-lg font-semibold text-gray-900">Carnet de Voyage</span>
+            <div class="flex flex-col">
+              <span class="text-lg font-semibold text-gray-900">Carnet de Voyage</span>
+              <span class="text-sm text-gray-500">Write naturally, visualize instantly.</span>
+            </div>
           </div>
-          <p class="text-sm text-gray-600">
-            Transform your travel notes into beautiful, interactive maps.
-          </p>
         </div>
 
         <div>
