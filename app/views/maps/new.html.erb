@@ -135,15 +135,24 @@
     }
   }
 
+  // Store map instance to prevent multiple initializations
+  let previewMapInstance = null;
+
   // Initialize Mapbox map
   function initializeMap() {
     const mapboxTokenMeta = document.querySelector('meta[name="mapbox-token"]');
 
     if (mapboxTokenMeta && mapboxTokenMeta.content && typeof mapboxgl !== 'undefined') {
+      // Clean up existing map instance if it exists
+      if (previewMapInstance) {
+        previewMapInstance.remove();
+        previewMapInstance = null;
+      }
+
       const mapboxToken = mapboxTokenMeta.content;
       mapboxgl.accessToken = mapboxToken;
 
-      const map = new mapboxgl.Map({
+      previewMapInstance = new mapboxgl.Map({
         container: 'preview-map',
         style: 'mapbox://styles/mapbox/streets-v12',
         center: [139.6917, 35.6895], // Tokyo coordinates
@@ -151,7 +160,7 @@
       });
 
       // Add navigation controls
-      map.addControl(new mapboxgl.NavigationControl());
+      previewMapInstance.addControl(new mapboxgl.NavigationControl());
     } else {
       console.warn('Mapbox not initialized: token or library missing');
     }
