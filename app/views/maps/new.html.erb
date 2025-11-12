@@ -135,15 +135,40 @@
     }
   }
 
+  // Store map instance to prevent multiple initializations
+  let previewMapInstance = null;
+
   // Initialize Mapbox map
   function initializeMap() {
     const mapboxTokenMeta = document.querySelector('meta[name="mapbox-token"]');
+    const mapContainer = document.getElementById('preview-map');
 
-    if (mapboxTokenMeta && mapboxTokenMeta.content && typeof mapboxgl !== 'undefined') {
+    // Check if we're on the right page and container exists
+    if (!mapContainer) {
+      console.log('Map container not found');
+      return;
+    }
+
+    // Wait for mapboxgl to be available
+    if (typeof mapboxgl === 'undefined') {
+      console.log('Mapbox GL not loaded yet, retrying...');
+      setTimeout(initializeMap, 100);
+      return;
+    }
+
+    if (mapboxTokenMeta && mapboxTokenMeta.content) {
+      // Clean up existing map instance if it exists
+      if (previewMapInstance) {
+        console.log('Removing existing map instance');
+        previewMapInstance.remove();
+        previewMapInstance = null;
+      }
+
       const mapboxToken = mapboxTokenMeta.content;
       mapboxgl.accessToken = mapboxToken;
 
-      const map = new mapboxgl.Map({
+      console.log('Creating new map instance');
+      previewMapInstance = new mapboxgl.Map({
         container: 'preview-map',
         style: 'mapbox://styles/mapbox/streets-v12',
         center: [139.6917, 35.6895], // Tokyo coordinates
@@ -151,20 +176,22 @@
       });
 
       // Add navigation controls
-      map.addControl(new mapboxgl.NavigationControl());
+      previewMapInstance.addControl(new mapboxgl.NavigationControl());
     } else {
-      console.warn('Mapbox not initialized: token or library missing');
+      console.warn('Mapbox token not found in meta tags');
     }
   }
 
   // Run on page load
   document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOMContentLoaded fired');
     initializeMap();
     initializeButtonState();
   });
 
   // Also run on turbo:load for Turbo compatibility
   document.addEventListener('turbo:load', function() {
+    console.log('turbo:load fired');
     initializeMap();
     initializeButtonState();
   });
