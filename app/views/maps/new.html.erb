@@ -1,0 +1,267 @@
+<% content_for :head do %>
+  <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet' />
+  <script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
+<% end %>
+
+<div data-turbo="false" style="display: flex; height: 100vh; overflow: hidden;">
+  <!-- LEFT SIDE: 40% width -->
+  <div style="width: 40%; display: flex; flex-direction: column; background-color: white; padding: 24px;">
+
+    <!-- HEADER (fixed) -->
+    <header class="mb-6 flex-shrink-0" style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div>
+        <%= link_to maps_path, class: "flex items-center gap-2 mb-2", style: "text-decoration: none;" do %>
+          <div class="flex items-center gap-2">
+            <%= image_tag "logo.svg", alt: "Carnet de Voyage", class: "h-8 w-8" %>
+            <div class="flex flex-col">
+              <h1 class="text-2xl font-semibold text-gray-900" style="margin: 0;">Carnet de Voyage</h1>
+              <span class="text-sm text-gray-500">Write naturally, visualize instantly.</span>
+            </div>
+          </div>
+        <% end %>
+        <!-- <p class="text-sm text-gray-500">Write naturally and visualize your notes into interactive maps</p> -->
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <%= link_to "← Back to Notes", maps_path, class: "text-sm text-sky-500 hover:text-sky-600 font-medium" %>
+      </div>
+    </header>
+
+    <% if @map.errors.any? %>
+      <div class="mb-4 p-3 flex-shrink-0" style="background-color: #fef2f2; border: 1px solid #fca5a5; border-radius: 0.125rem;">
+        <p class="font-medium" style="font-size: 0.875rem; color: #991b1b;"><%= pluralize(@map.errors.count, "error") %> prevented this map from being saved:</p>
+        <ul class="mt-2 text-sm list-disc list-inside" style="color: #991b1b;">
+          <% @map.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_with model: @map, local: true, html: { style: "flex: 1; display: flex; flex-direction: column; min-height: 0;" } do |form| %>
+      <!-- Map Title -->
+      <div class="flex-shrink-0" style="margin-bottom: 12px;">
+        <%= form.text_field :title,
+            placeholder: "Enter notes title (e.g., New York Bars, Voyage à Paris)...",
+            style: "width: 100%; padding: 16px; border: 1px solid #d1d5db; border-radius: 0.125rem; font-size: 18px; font-weight: 600; color: #374151; background-color: #ffffff; outline: none; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" %>
+      </div>
+
+      <!-- Trip Notes Form -->
+      <div style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
+        <%= form.text_area :original_text,
+            placeholder: "Paste text containing place names, addresses, or landmarks...\n\nExample:\nNew York City\nGive me 5 great cocktail bars\n\n1. The Up & Up is a cocktail bar in the West Village...\n2. The Raines Law Room at The William...",
+            style: "flex: 1; padding: 16px; border: 1px solid #d1d5db; border-radius: 0.125rem; resize: none; background-color: #ffffff; color: #111827; width: 100%; box-sizing: border-box; font-size: 15px; line-height: 1.6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; outline: none; overflow-y: auto;",
+            data: { textarea_target: "input" } %>
+
+        <!-- Hidden fields -->
+        <%= form.hidden_field :description %>
+        <%= form.hidden_field :privacy, value: 'shared_with_link' %>
+
+        <%= form.submit "Extract & Map Places",
+            disabled: true,
+            data: { submit_button_target: "button", loading_text: "Processing..." },
+            class: "bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold transition duration-200 flex-shrink-0",
+            style: "border-radius: 0.125rem; margin-top: 16px; padding: 12px 24px; width: 100%; border: none; position: relative;" %>
+
+        <!-- Loading Spinner (hidden by default) -->
+        <div data-loading-spinner style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+          <div style="border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid #ffffff; border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite;"></div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Footer Space (5vh) -->
+    <div style="height: 5vh; flex-shrink: 0;"></div>
+  </div>
+
+  <!-- RIGHT SIDE: 60% width - Map with Tokyo center -->
+  <div style="width: 60%; position: relative; overflow: hidden;">
+    <div id="preview-map" style="width: 100%; height: 100vh;"></div>
+  </div>
+</div>
+
+<style>
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>
+
+<script>
+  // Button disabled state functionality
+  function initializeButtonState() {
+    const textarea = document.querySelector('[data-textarea-target="input"]');
+    const submitButton = document.querySelector('[data-submit-button-target="button"]');
+    const loadingSpinner = document.querySelector('[data-loading-spinner]');
+    const form = submitButton ? submitButton.closest('form') : null;
+
+    if (textarea && submitButton) {
+      // Store original button text
+      const originalText = submitButton.value;
+      const loadingText = submitButton.dataset.loadingText || 'Processing...';
+
+      // Function to check if textarea has content
+      function updateButtonState() {
+        const hasContent = textarea.value.trim().length > 0;
+        submitButton.disabled = !hasContent;
+
+        // Update styles based on disabled state
+        if (hasContent) {
+          submitButton.style.backgroundColor = '#2563eb'; // blue-600
+          submitButton.style.cursor = 'pointer';
+          submitButton.style.color = '#ffffff'; // white text
+        } else {
+          submitButton.style.backgroundColor = '#9ca3af'; // gray-400
+          submitButton.style.cursor = 'not-allowed';
+          submitButton.style.color = '#ffffff'; // white text
+        }
+      }
+
+      // Check on input
+      textarea.addEventListener('input', updateButtonState);
+
+      // Check immediately on initialization
+      updateButtonState();
+
+      // Handle form submission - show loading state
+      if (form) {
+        form.addEventListener('submit', function(e) {
+          // Show loading state
+          submitButton.value = loadingText;
+          submitButton.disabled = true;
+          submitButton.style.backgroundColor = '#2563eb'; // Keep blue during loading
+          submitButton.style.cursor = 'wait';
+        });
+      }
+    }
+  }
+
+  // Store map instance to prevent multiple initializations
+  let previewMapInstance = null;
+  let isInitializing = false;
+
+  // Get map style based on tile provider
+  function getMapStyle() {
+    const tileProvider = document.querySelector('meta[name="tile-provider"]')?.content || 'openstreetmap';
+
+    if (tileProvider === 'mapbox') {
+      return 'mapbox://styles/mapbox/streets-v12';
+    } else {
+      // OpenStreetMap tile configuration
+      return {
+        version: 8,
+        sources: {
+          'osm-tiles': {
+            type: 'raster',
+            tiles: [
+              'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'
+            ],
+            tileSize: 256,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          }
+        },
+        layers: [
+          {
+            id: 'osm-tiles-layer',
+            type: 'raster',
+            source: 'osm-tiles',
+            minzoom: 0,
+            maxzoom: 19
+          }
+        ]
+      };
+    }
+  }
+
+  // Initialize map
+  function initializeMap() {
+    // Prevent multiple simultaneous initializations
+    if (isInitializing || previewMapInstance) {
+      console.log('Map already initializing or initialized, skipping...');
+      return;
+    }
+
+    isInitializing = true;
+
+    const tileProviderMeta = document.querySelector('meta[name="tile-provider"]');
+    const mapboxTokenMeta = document.querySelector('meta[name="mapbox-token"]');
+    const mapContainer = document.getElementById('preview-map');
+
+    // Check if we're on the right page and container exists
+    if (!mapContainer) {
+      console.log('Map container not found');
+      isInitializing = false;
+      return;
+    }
+
+    // Wait for mapboxgl to be available
+    if (typeof mapboxgl === 'undefined') {
+      console.log('Mapbox GL not loaded yet, retrying...');
+      isInitializing = false;
+      setTimeout(initializeMap, 100);
+      return;
+    }
+
+    const tileProvider = tileProviderMeta?.content || 'openstreetmap';
+
+    // Mapbox GL JS requires a token even for non-Mapbox tiles
+    // Use a placeholder token for OpenStreetMap to satisfy the library
+    if (tileProvider === 'mapbox') {
+      if (!mapboxTokenMeta || !mapboxTokenMeta.content) {
+        console.warn('Mapbox token not found in meta tags');
+        isInitializing = false;
+        return;
+      }
+      mapboxgl.accessToken = mapboxTokenMeta.content;
+    } else {
+      // Set a placeholder token for OSM (Mapbox GL JS requires this)
+      // This won't make any API calls to Mapbox when using custom tile sources
+      mapboxgl.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+    }
+
+    console.log('Creating new map instance with', tileProvider, 'tiles');
+
+    try {
+      previewMapInstance = new mapboxgl.Map({
+        container: 'preview-map',
+        style: getMapStyle(),
+        center: [139.6917, 35.6895], // Tokyo coordinates
+        zoom: 11
+      });
+
+      // Wait for map to load before adding controls
+      previewMapInstance.on('load', function() {
+        console.log('Map loaded successfully');
+        isInitializing = false;
+      });
+
+      // Handle errors
+      previewMapInstance.on('error', function(e) {
+        console.error('Map error:', e);
+        isInitializing = false;
+      });
+
+      // Add navigation controls
+      previewMapInstance.addControl(new mapboxgl.NavigationControl());
+    } catch (error) {
+      console.error('Error creating map:', error);
+      isInitializing = false;
+      previewMapInstance = null;
+    }
+  }
+
+  // Run on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOMContentLoaded fired');
+    initializeMap();
+    initializeButtonState();
+  });
+
+  // Also run on turbo:load for Turbo compatibility
+  document.addEventListener('turbo:load', function() {
+    console.log('turbo:load fired');
+    initializeMap();
+    initializeButtonState();
+  });
+</script>

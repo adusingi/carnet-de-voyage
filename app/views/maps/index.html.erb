@@ -1,0 +1,79 @@
+<div class="min-h-screen bg-white">
+  <!-- Navigation -->
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <%= link_to root_path, class: "flex items-center gap-2" do %>
+          <div class="flex items-center gap-2">
+            <%= image_tag "logo.svg", alt: "Carnet de Voyage", class: "h-8 w-8" %>
+            <div class="flex flex-col">
+              <span class="text-xl font-semibold text-gray-900">Carnet de Voyage</span>
+              <span class="text-sm text-gray-500">Write naturally, visualize instantly.</span>
+            </div>
+          </div>
+        <% end %>
+
+        <div class="flex items-center gap-6">
+          <% if user_signed_in? %>
+            <%= link_to "My Notes", maps_path, class: "text-gray-900 font-semibold border-b-2 border-sky-500" %>
+            <%= button_to "Sign out", destroy_user_session_path, method: :delete, class: "text-gray-600 hover:text-gray-900 transition-colors font-medium", form: { style: "display: inline;" } %>
+          <% else %>
+            <%= link_to "Pricing", root_path(anchor: "pricing"), class: "text-gray-600 hover:text-gray-900 transition-colors font-medium" %>
+            <%= link_to "Log in", new_user_session_path, class: "text-gray-600 hover:text-gray-900 transition-colors font-medium" %>
+            <%= link_to "Get Started", new_map_path, class: "bg-sky-500 text-white px-4 py-2 rounded-lg hover:bg-sky-600 transition-colors font-medium" %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Header Section -->
+  <section class="pt-32 pb-12 px-4 sm:px-6 lg:px-8 bg-white">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-4xl font-bold text-gray-900">My Travel Notes</h1>
+          <!-- <p class="text-gray-600 mt-2">Write naturally and visualize your notes into interactive maps</p> -->
+        </div>
+        <% if user_signed_in? %>
+          <%= link_to "Write a note", new_map_path, class: "bg-sky-500 text-white px-6 py-3 rounded-lg hover:bg-sky-600 transition-colors font-medium shadow-lg hover:shadow-xl" %>
+        <% end %>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <div class="max-w-6xl mx-auto px-6 py-12">
+    <% if @maps.any? %>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <% @maps.each do |map| %>
+          <%= link_to map, class: "block bg-white border border-gray-200 rounded-lg hover:shadow-md transition p-6" do %>
+            <h2 class="text-lg font-semibold text-gray-900 mb-2"><%= map.title %></h2>
+
+            <% if map.description.present? %>
+              <p class="text-sm text-gray-600 mb-3 line-clamp-2"><%= map.description %></p>
+            <% end %>
+
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-500"><%= pluralize(map.places_count, 'place') %></span>
+              <span class="text-xs text-gray-400"><%= time_ago_in_words(map.created_at) %> ago</span>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="text-center py-16 bg-gray-50 rounded-lg border border-gray-200">
+        <h3 class="text-xl font-medium text-gray-900 mb-2">No notes yet</h3>
+        <p class="text-gray-600 mb-6">
+          <%= user_signed_in? ? "Write your first note to get started" : "Sign in to create your first travel map" %>
+        </p>
+        <% if user_signed_in? %>
+          <%= link_to "Write a note", new_map_path, class: "px-6 py-3 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition inline-block font-medium shadow-lg hover:shadow-xl" %>
+        <% else %>
+          <%= link_to "Log in", new_user_session_path, class: "px-6 py-3 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition inline-block font-medium shadow-lg hover:shadow-xl" %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+</div>

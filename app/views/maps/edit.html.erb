@@ -1,0 +1,147 @@
+<div style="display: flex; height: 100vh; overflow: hidden;">
+  <!-- LEFT SIDE: 40% width -->
+  <div style="width: 40%; display: flex; flex-direction: column; background-color: white; padding: 24px;">
+
+    <!-- HEADER (fixed) -->
+    <header class="mb-6 flex-shrink-0" style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div>
+        <%= link_to @map, class: "flex items-center gap-2 mb-2", style: "text-decoration: none;" do %>
+          <div class="flex items-center gap-2">
+            <%= image_tag "logo.svg", alt: "Carnet de Voyage", class: "h-8 w-8" %>
+            <div class="flex flex-col">
+              <h1 class="text-2xl font-semibold text-gray-900" style="margin: 0;">Carnet de Voyage</h1>
+              <span class="text-sm text-gray-500">Write naturally, visualize instantly.</span>
+            </div>
+          </div>
+        <% end %>
+        <!-- <p class="text-sm text-gray-500">Write naturally and visualize your notes into interactive maps</p> -->
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <%= link_to "← Back to Map", @map, class: "text-sm text-sky-500 hover:text-sky-600 font-medium" %>
+        <%= link_to "Cancel", @map, class: "text-sm px-4 py-2 bg-gray-200 text-gray-800 hover:bg-gray-300 transition" %>
+      </div>
+    </header>
+
+    <!-- Destination -->
+    <% if @map.destination.present? %>
+      <div class="flex-shrink-0" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 0.125rem; padding: 12px; margin-bottom: 16px;"><p style="font-size: 0.875rem; color: #1e40af; margin: 0;"><span style="font-weight: 600;">📍 Destination:</span> <%= @map.destination %></p></div>
+    <% end %>
+
+    <!-- Trip Notes Form -->
+    <div style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
+      <%= form_with model: @map, local: true, html: { style: "flex: 1; display: flex; flex-direction: column; min-height: 0;" } do |f| %>
+        <!-- Map Title -->
+        <div class="flex-shrink-0" style="margin-bottom: 12px; margin-top: 0;">
+          <%= f.text_field :title,
+              placeholder: "Enter notes title (e.g., New York Bars, Voyage à Paris)...",
+              style: "width: 100%; padding: 16px; border: 1px solid #d1d5db; border-radius: 0.125rem; font-size: 18px; font-weight: 600; color: #374151; background-color: #ffffff; outline: none; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;" %>
+        </div>
+
+        <%= f.text_area :original_text,
+            placeholder: "Paste text containing place names, addresses, or landmarks...\n\nExample:\nNew York City\nGive me 5 great cocktail bars\n\n1. The Up & Up is a cocktail bar in the West Village...\n2. The Raines Law Room at The William...",
+            style: "flex: 1; padding: 16px; border: 1px solid #d1d5db; border-radius: 0.125rem; resize: none; background-color: #ffffff; color: #111827; width: 100%; box-sizing: border-box; font-size: 15px; line-height: 1.6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; outline: none; overflow-y: auto;",
+            data: { textarea_target: "input" } %>
+
+        <%= f.submit "Extract & Map Places",
+            disabled: true,
+            data: { submit_button_target: "button", loading_text: "Processing..." },
+            class: "bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold transition duration-200 flex-shrink-0",
+            style: "border-radius: 0.125rem; margin-top: 16px; padding: 12px 24px; width: 100%; border: none; position: relative;" %>
+
+        <!-- Loading Spinner (hidden by default) -->
+        <div data-loading-spinner style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+          <div style="border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid #ffffff; border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite;"></div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Footer Space (5vh) -->
+    <div style="height: 5vh; flex-shrink: 0;"></div>
+  </div>
+
+  <!-- RIGHT SIDE: 60% width -->
+  <div style="width: 60%; position: relative; overflow: hidden;">
+    <div id="map" style="width: 100%; height: 100vh;" data-controller="map" data-map-places-value="<%= @map.places.to_json(only: [:id, :name, :latitude, :longitude, :address, :place_type, :context]) %>"></div>
+  </div>
+</div>
+
+<style>
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>
+
+<script>
+  // Function to initialize button state
+  function initializeButtonState() {
+    const textarea = document.querySelector('[data-textarea-target="input"]');
+    const submitButton = document.querySelector('[data-submit-button-target="button"]');
+    const loadingSpinner = document.querySelector('[data-loading-spinner]');
+    const form = submitButton ? submitButton.closest('form') : null;
+
+    if (textarea && submitButton) {
+      // Store original content and button text
+      const originalContent = textarea.value;
+      const originalText = submitButton.value;
+      const loadingText = submitButton.dataset.loadingText || 'Processing...';
+      let hasBeenModified = false;
+
+      // Function to check if textarea has been modified
+      function updateButtonState() {
+        const currentContent = textarea.value.trim();
+        const hasContent = currentContent.length > 0;
+
+        // Check if content has been modified from original
+        hasBeenModified = currentContent !== originalContent.trim();
+
+        // Button enabled only if has content AND has been modified
+        const shouldEnable = hasContent && hasBeenModified;
+        submitButton.disabled = !shouldEnable;
+
+        // Update styles based on state
+        if (shouldEnable) {
+          submitButton.style.backgroundColor = '#2563eb'; // blue-600
+          submitButton.style.cursor = 'pointer';
+          submitButton.style.color = '#ffffff'; // white text
+        } else {
+          submitButton.style.backgroundColor = '#9ca3af'; // gray-400
+          submitButton.style.cursor = 'not-allowed';
+          submitButton.style.color = '#ffffff'; // white text
+        }
+      }
+
+      // Check on input
+      textarea.addEventListener('input', updateButtonState);
+
+      // Set initial state (disabled since not modified yet)
+      submitButton.disabled = true;
+      submitButton.style.backgroundColor = '#9ca3af';
+      submitButton.style.cursor = 'not-allowed';
+      submitButton.style.color = '#ffffff';
+
+      // Handle form submission - show loading state
+      if (form) {
+        form.addEventListener('submit', function(e) {
+          // Show loading state
+          submitButton.value = loadingText;
+          submitButton.disabled = true;
+          submitButton.style.backgroundColor = '#2563eb'; // Keep blue during loading
+          submitButton.style.cursor = 'wait';
+
+          // Optional: show spinner (uncomment if you want spinner instead of just text)
+          // if (loadingSpinner) {
+          //   loadingSpinner.style.display = 'block';
+          //   submitButton.style.color = 'transparent'; // Hide text to show spinner
+          // }
+        });
+      }
+    }
+  }
+
+  // Run on DOMContentLoaded
+  document.addEventListener('DOMContentLoaded', initializeButtonState);
+
+  // Also run on turbo:load for Turbo compatibility
+  document.addEventListener('turbo:load', initializeButtonState);
+</script>
